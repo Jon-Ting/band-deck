@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Band-Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Band-Deck</h1>
+            <p>Create musician-friendly PowerPoint slides with lyrics and chords in one click</p>
+        </header>
+
+        <div class="search-container">
+            <form id="search-form" class="search-form">
+                <div class="form-group">
+                    <label for="song-name">Song Name</label>
+                    <input type="text" id="song-name" name="song-name" placeholder="Enter song name" required>
+                </div>
+                <div class="form-group">
+                    <label for="artist-name">Artist (Optional)</label>
+                    <input type="text" id="artist-name" name="artist-name" placeholder="Enter artist name">
+                </div>
+                <div class="form-group">
+                    <label for="key">Key (Optional)</label>
+                    <input type="text" id="key" name="key" placeholder="e.g. C, G, F#">
+                </div>
+                <div class="button-container">
+                    <button type="submit" id="search-button">Generate Slide</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="error-message" id="error-message">
+            <p>Sorry, we couldn't find that song. Please check the spelling or try another song.</p>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Searching for your song...</p>
+        </div>
+
+        <div class="preview-container" id="preview-container">
+            <h2>Preview</h2>
+            <div class="button-container">
+                <button id="download-button">Download PowerPoint</button>
+                <button id="save-slide-button">Save Slide</button>
+            </div>
+            <div class="slide-preview">
+                <h3>PowerPoint Preview</h3>
+                <div class="slide-frame">
+                    <div class="slide-title" id="slide-title">Song Title</div>
+                    <div class="slide-content slide-content-preview" id="slide-content">
+                        <!-- Slide content will be inserted here -->
+                    </div>
+                    <div class="slide-disclaimer">For personal and educational use only. Please respect copyright laws.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="saved-slides-container" id="saved-slides-container">
+            <h2>Saved Slides</h2>
+            <div class="button-container">
+                <button id="download-all-button">Download All as PowerPoint</button>
+                <button id="cleanup-temp-files-button">Cleanup Temporary Files</button>
+            </div>
+            <div id="saved-slides-list">
+                <!-- Saved slides will be listed here -->
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h3>Copyright Notice & Fair Use Disclaimer</h3>
+            <p>This tool is intended for personal, educational, and worship use only. All content is retrieved from public sources and should be used in compliance with copyright laws.</p>
+            <p>The generated slides are provided under fair use principles for:</p>
+            <ul>
+                <li>Personal study and practice</li>
+                <li>Educational purposes</li>
+                <li>Worship services in accordance with appropriate licensing</li>
+            </ul>
+            <p>Users are responsible for ensuring they have appropriate licenses (such as CCLI) for any copyrighted material used in public settings.</p>
+            <p>Please respect the rights of artists and songwriters by using these materials appropriately and supporting their work through legitimate channels.</p>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
