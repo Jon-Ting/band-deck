@@ -30,5 +30,30 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/example/band-deck"
 
+[project.optional-dependencies]
+# Test/lint/format tooling. Install with `pip install -e .[dev]`.
+dev = [
+  "pytest>=7",
+  "pytest-cov>=4",
+  "ruff>=0.4",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+# Keep ephemeral and template binary content out of source distributions.
+exclude = [
+  "/.git",
+  "/.gitignore",
+  "/venv",
+  "/.venv",
+  "/env",
+  "/__pycache__",
+  "/**/__pycache__",
+  "/*.py[cod]",
+  "/**/*.py[cod]",
+  "/src/saved_slides/*.pptx",
+  "/src/saved_slides/*.json",
+  "/~$*",
+]
