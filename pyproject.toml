@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "band-deck"
+version = "0.1.0"
+description = "Musician-friendly PowerPoint slides with lyrics and chords, generated from public sources."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Personal and Educational Use Only"
+authors = [{ name = "Band-Deck Maintainers" }]
+keywords = ["music", "powerpoint", "lyrics", "chords", "slides", "performance"]
+classifiers = [
+  "Framework :: Flask",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Graphics :: Presentation",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "Flask>=3.0",
+  "python-pptx>=1.0",
+  "requests>=2.30",
+  "beautifulsoup4>=4.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/band-deck"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
