@@ -38,11 +38,11 @@ A Python Flask web application that creates musician-friendly PowerPoint slides 
 
 ## 📋 Prerequisites
 
-- **Python 3.10 or higher**
-- **pip** (Python package installer)
+- **[uv](https://docs.astral.sh/uv/)** (manages Python, virtual environments, and dependencies — replaces `pip` + `venv` + `pyenv`)
+  > Install uv once: `curl -LsSf https://astral.sh/uv/install.sh | sh` (or `pip install uv`, or `brew install uv`).
 - A modern web browser
 
-> The repository ships with sample song files in `src/saved_slides/` — these are templates you can use or replace.
+> The repository ships with sample song files in `src/saved_slides/` — these are templates you can use or replace. The `.python-version` file pins Python 3.10 so `uv` picks the right interpreter automatically.
 
 ---
 
@@ -55,49 +55,41 @@ git clone <your-repo-url> SongSlides
 cd SongSlides
 ```
 
-### 2. Create a virtual environment
+### 2. Install dependencies with uv
+
+From the project root, `uv sync` creates a `.venv` virtual environment and installs every runtime dependency plus the `dev` extra (pytest, ruff, etc.). The resolved versions are pinned in `uv.lock`, which is committed for reproducibility.
 
 ```bash
-python -m venv venv
+uv sync
 ```
 
-Activate it:
-
-- **macOS / Linux**
-  ```bash
-  source venv/bin/activate
-  ```
-- **Windows**
-  ```bash
-  venv\Scripts\activate
-  ```
-
-### 3. Install dependencies
-
-From the project root, install Band-Deck (and its runtime dependencies) in editable mode:
+For a production-like install without dev tooling, use:
 
 ```bash
-pip install -e .
+uv sync --no-dev
 ```
 
-For a non-editable install (e.g. for deployment), use `pip install .` instead.
+> Prefer plain `pip`? `uv` is optional — `pyproject.toml` is standards-compliant, so `pip install -e .[dev]` still works if you bring your own Python 3.10+ environment.
 
-**For contributors / developers**, install with optional dev/test tooling (pytest, ruff, etc.):
+**Contributors**: when you change dependencies in `pyproject.toml`, regenerate the lockfile first, then apply:
 
 ```bash
-pip install -e .[dev]
+uv lock
+uv sync
 ```
 
 ---
 
 ## ▶️ Running the App
 
+> All commands below assume you ran `uv sync` first. If you'd rather activate the venv manually, use `source .venv/bin/activate` (macOS/Linux) or `.venv\Scripts\activate` (Windows) and drop the `uv run` prefix.
+
 ### Start the Flask server
 
 From the project root:
 
 ```bash
-python src/main.py
+uv run python src/main.py
 ```
 
 The server starts on **http://localhost:5000**. Open that URL in your browser to access the web UI.
@@ -105,10 +97,16 @@ The server starts on **http://localhost:5000**. Open that URL in your browser to
 ### Run the tests
 
 ```bash
-python src/run_tests.py
+uv run python src/run_tests.py
 ```
 
 This discovers and executes all `test_*.py` files under the `tests/` directory.
+
+### Lint with ruff
+
+```bash
+uv run ruff check .
+```
 
 ---
 
@@ -153,7 +151,9 @@ The response is a JSON object containing `title`, `artist`, `content` (raw secti
 
 ```
 SongSlides/
-├── pyproject.toml             # Packaging metadata & runtime dependencies (hatchling)
+├── pyproject.toml             # Packaging metadata & runtime dependencies (hatchling + uv)
+├── uv.lock                    # Resolved dependency lockfile (committed for reproducibility)
+├── .python-version            # Pins Python 3.10 for `uv`
 ├── user_guide.md              # End-user guide for the deployed app
 ├── README.md                  # ← you are here
 ├── .gitignore
