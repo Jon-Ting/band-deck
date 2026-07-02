@@ -30,8 +30,13 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/example/band-deck"
 
-[project.optional-dependencies]
-# Test/lint/format tooling. Install with `pip install -e .[dev]`.
+# -----------------------------------------------------------------------------
+# Dependency groups (PEP 735)
+# -----------------------------------------------------------------------------
+# Test/lint/format tooling lives in the PEP 735 `dev` group. `uv sync`
+# installs it by default; `uv sync --no-dev` skips it.
+# Spec: https://peps.python.org/pep-0735/
+[dependency-groups]
 dev = [
   "pytest>=7",
   "pytest-cov>=4",
@@ -63,8 +68,8 @@ exclude = [
 # -----------------------------------------------------------------------------
 # This project uses `uv` for dependency management. See https://docs.astral.sh/uv/
 # Run `uv sync` to create a virtual environment (in `.venv`) and install every
-# dependency, including the `dev` extra. The lockfile (`uv.lock`) is committed
-# so installs are fully reproducible.
+# dependency, including the PEP 735 `dev` group. The lockfile (`uv.lock`) is
+# committed so installs are fully reproducible.
 #
 # - Install everything (runtime + dev):   uv sync
 # - Install runtime only:                 uv sync --no-dev

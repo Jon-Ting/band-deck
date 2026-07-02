@@ -13,7 +13,7 @@ dependencies = [
     { name = "requests" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -24,13 +24,16 @@ dev = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "flask", specifier = ">=3.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4" },
     { name = "python-pptx", specifier = ">=1.0" },
     { name = "requests", specifier = ">=2.30" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=7" },
+    { name = "pytest-cov", specifier = ">=4" },
+    { name = "ruff", specifier = ">=0.4" },
+]
 
 [[package]]
 name = "beautifulsoup4"
