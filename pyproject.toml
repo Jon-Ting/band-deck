@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Musician-friendly PowerPoint slides with lyrics and chords, generated from public sources."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "Personal and Educational Use Only"
+license = "MIT"
 authors = [{ name = "Band-Deck Maintainers" }]
 keywords = ["music", "powerpoint", "lyrics", "chords", "slides", "performance"]
 classifiers = [
@@ -57,3 +57,17 @@ exclude = [
   "/src/saved_slides/*.json",
   "/~$*",
 ]
+
+# -----------------------------------------------------------------------------
+# uv configuration
+# -----------------------------------------------------------------------------
+# This project uses `uv` for dependency management. See https://docs.astral.sh/uv/
+# Run `uv sync` to create a virtual environment (in `.venv`) and install every
+# dependency, including the `dev` extra. The lockfile (`uv.lock`) is committed
+# so installs are fully reproducible.
+#
+# - Install everything (runtime + dev):   uv sync
+# - Install runtime only:                 uv sync --no-dev
+# Contributors: after editing dependencies, run `uv lock` (then `uv sync`).
+[tool.uv]
+package = true
