@@ -43,6 +43,16 @@ dev = [
   "ruff>=0.4",
 ]
 
+# -----------------------------------------------------------------------------
+# pytest configuration
+# -----------------------------------------------------------------------------
+# Tests live at the project root (not inside src/). 'pythonpath = ["src"]'
+# keeps the existing 'from src.*' imports working without per-test sys.path
+# manipulation. Tests are auto-discovered from 'tests/test_*.py'.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
