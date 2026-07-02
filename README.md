@@ -51,8 +51,8 @@ A Python Flask web application that creates musician-friendly PowerPoint slides 
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url> SongSlides
-cd SongSlides
+git clone <your-repo-url> Band-Deck
+cd Band-Deck
 ```
 
 ### 2. Install dependencies with uv
@@ -150,12 +150,13 @@ The response is a JSON object containing `title`, `artist`, `content` (raw secti
 ## 🗂️ Project Structure
 
 ```
-SongSlides/
+Band-Deck/
 ├── pyproject.toml             # Packaging metadata & runtime dependencies (hatchling + uv)
 ├── uv.lock                    # Resolved dependency lockfile (committed for reproducibility)
 ├── .python-version            # Pins Python 3.10 for `uv`
-├── user_guide.md              # End-user guide for the deployed app
 ├── README.md                  # ← you are here
+├── docs/
+│   └── user_guide.md          # End-user guide for the deployed app
 ├── .gitignore
 ├── src/
 │   ├── main.py                # Flask app entry point
@@ -180,13 +181,7 @@ SongSlides/
 
 ## ⚖️ Legal & Copyright Notice
 
-This tool is intended for **personal study, educational, and live-performance use only**. All content is retrieved from public sources and should be consumed in compliance with applicable copyright laws.
-
-By using this application you acknowledge that:
-
-- Generated slides may be subject to copyright. You are responsible for ensuring appropriate licensing (e.g. **CCLI** for worship use, or **ASCAP / BMI / SESAC** for general public performance) before projection or distribution.
-- This project ships with template/sample songs only — please verify each song's licensing status for your jurisdiction and use case.
-- The maintainers do not endorse redistribution of copyrighted lyrics or chord charts outside the bounds of fair use.
+For full legal terms (intended use, licensing responsibilities, redistribution, template-data caveats), see [`docs/user_guide.md` → Legal Considerations](docs/user_guide.md#legal-considerations).
 
 ---
 

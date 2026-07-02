@@ -14,7 +14,7 @@ Band-Deck is a web application that allows you to quickly create musician-friend
 
 ## How to Use
 
-1. **Access the Application**: Visit [https://4y0h0i3c5kmy.manus.space](https://4y0h0i3c5kmy.manus.space)
+1. **Access the Application**: Run the Flask app locally per the docs (see [README → Installation](../README.md)) and open **http://localhost:5000** in your browser.
 
 2. **Search for a Song**:
    - Enter the song name in the "Song Name" field
@@ -31,22 +31,27 @@ Band-Deck is a web application that allows you to quickly create musician-friend
    - Open it in PowerPoint, Keynote, or LibreOffice Impress to project or print
 
 5. **Start a New Search**:
-   - Click "New Search" to clear the form and search for another song
+   - Type a new song name into the **Song Name** field and click **Generate Slide** to search for another song
 
 ## Data Sources
 
-The application searches the following sources for lyrics and chords:
+The application currently scrapes one public source for lyrics and chords:
 
-1. **HymnChords.net**: Public-domain traditional hymns and similar songs
-2. **Reawaken Hymns**: Modern arrangements of traditional hymns and contemporary songs
+1. **[Worship Together](https://www.worshiptogether.com/)** — Christian-worship songs with chord charts.
 
-Additional sources (covering more genres, e.g. pop, rock, folk, country) may be added in future updates.
+Additional sources across more genres (pop, rock, folk, country) are planned; the scraper list lives in `src/utils/search.py`.
 
 ## Legal Considerations
 
-- This tool is intended for personal, educational, and live-performance use (including worship services, concerts, rehearsals, and lessons)
-- Users are responsible for ensuring they have appropriate licenses — e.g. **CCLI** for worship use, or **ASCAP / BMI / SESAC** or other rights organisations for general public performance — for any copyrighted material used in public settings
-- The application respects rate limits of source websites to prevent overloading their servers
+This tool is intended for **personal study, educational, and live-performance use only**. All content is retrieved from public sources and should be consumed in compliance with applicable copyright laws.
+
+By using this application you acknowledge that:
+
+- Generated slides may be subject to copyright. You are responsible for ensuring appropriate licensing (e.g. **CCLI** for worship use, or **ASCAP / BMI / SESAC** for general public performance) before projection or distribution.
+- Acceptable use includes (but is not limited to) worship services, concerts, rehearsals, and lessons.
+- The application respects rate limits of source websites to prevent overloading their servers.
+- This project ships with template/sample songs only — please verify each song's licensing status for your jurisdiction and use case.
+- The maintainers do not endorse redistribution of copyrighted lyrics or chord charts outside the bounds of fair use.
 
 ## Printing Instructions
 
@@ -60,7 +65,7 @@ The downloaded `.pptx` files can be opened in PowerPoint, Keynote, or LibreOffic
 
 - **Song Not Found**: Try checking the spelling or searching with just the song name without the artist
 - **Download Issues**: Ensure your browser allows downloads from the application
-- **Display Problems**: If the preview appears incorrect, try a different song or contact support
+- **Display Problems**: If the preview appears incorrect, try a different song or open an issue on the project repository
 
 ## Technical Information
 
