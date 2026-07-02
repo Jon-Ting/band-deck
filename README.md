@@ -156,7 +156,7 @@ Band-Deck/
 ├── .python-version            # Pins Python 3.10 for `uv`
 ├── README.md                  # ← you are here
 ├── docs/
-│   └── user_guide.md          # End-user guide for the deployed app
+│   └── USER_GUIDE.md           # End-user guide for the deployed app
 ├── .gitignore
 ├── src/
 │   ├── main.py                # Flask app entry point
@@ -181,7 +181,7 @@ Band-Deck/
 
 ## ⚖️ Legal & Copyright Notice
 
-For full legal terms (intended use, licensing responsibilities, redistribution, template-data caveats), see [`docs/user_guide.md` → Legal Considerations](docs/user_guide.md#legal-considerations).
+For full legal terms (intended use, licensing responsibilities, redistribution, template-data caveats), see [`docs/USER_GUIDE.md` → Legal Considerations](docs/USER_GUIDE.md#legal-considerations).
 
 ---
 
@@ -195,7 +195,7 @@ For full legal terms (intended use, licensing responsibilities, redistribution, 
 
 ## 🙏 Acknowledgements
 
-- Lyrics and chords are currently sourced from [Worship Together](https://www.worshiptogether.com/); coverage is being expanded to non-worship genres.
+- Lyrics and chords are sourced from [Worship Together](https://www.worshiptogether.com/).
 - PowerPoint generation powered by [`python-pptx`](https://python-pptx.readthedocs.io/).
 - Built with [Flask](https://flask.palletsprojects.com/).
 

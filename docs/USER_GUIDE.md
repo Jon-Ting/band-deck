@@ -2,7 +2,7 @@
 
 ## Application Overview
 
-Band-Deck is a web application that allows you to quickly create musician-friendly slides displaying song lyrics with chord notations. The application searches reliable public sources for songs across many genres — including hymns, contemporary worship, folk, pop, and more — formats the content appropriately, and generates downloadable PowerPoint files optimized for musicians.
+Band-Deck is a web application that allows you to quickly create musician-friendly slides displaying song lyrics with chord notations. The application currently scrapes a single public source (contemporary-worship songs on Worship Together), formats the content appropriately, and generates downloadable PowerPoint files optimized for musicians.
 
 ## Features
 
