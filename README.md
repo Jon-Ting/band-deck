@@ -57,7 +57,7 @@ cd SongSlides
 
 ### 2. Install dependencies with uv
 
-From the project root, `uv sync` creates a `.venv` virtual environment and installs every runtime dependency plus the `dev` extra (pytest, ruff, etc.). The resolved versions are pinned in `uv.lock`, which is committed for reproducibility.
+From the project root, `uv sync` creates a `.venv` virtual environment, installs every runtime dependency, and (by default) the PEP 735 `dev` group (pytest, ruff, etc.). The resolved versions are pinned in `uv.lock`, which is committed for reproducibility.
 
 ```bash
 uv sync
@@ -69,7 +69,7 @@ For a production-like install without dev tooling, use:
 uv sync --no-dev
 ```
 
-> Prefer plain `pip`? `uv` is optional — `pyproject.toml` is standards-compliant, so `pip install -e .[dev]` still works if you bring your own Python 3.10+ environment.
+> Prefer plain `pip`? `uv` is optional — dev tooling is now in a PEP 735 group (`[dependency-groups]`), so pip needs at least **24.2** and the `--group` flag (e.g. `pip install --group dev`) to install it; for runtime deps alone, `pip install -e .` is unaffected.
 
 **Contributors**: when you change dependencies in `pyproject.toml`, regenerate the lockfile first, then apply:
 
@@ -97,7 +97,7 @@ The server starts on **http://localhost:5000**. Open that URL in your browser to
 ### Run the tests
 
 ```bash
-uv run python src/run_tests.py
+uv run pytest
 ```
 
 This discovers and executes all `test_*.py` files under the `tests/` directory.
