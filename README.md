@@ -191,7 +191,6 @@ Band-Deck/
 │   ├── TESTING.md              # Test strategy and fixtures
 │   ├── DEPLOYMENT.md           # Operational notes (Marp CLI, health checks, ...)
 │   ├── DECISIONS.md            # Design rationale for non-obvious choices
-│   └── MIGRATION.md            # 5-phase rollout history of the HTML/Marp rollout
 ├── .gitignore
 ├── src/
 │   ├── main.py                # Flask app entry point
@@ -230,7 +229,7 @@ For full legal terms (intended use, licensing responsibilities, redistribution, 
 - **Rate limiting** is currently disabled. Add a proper external limiter (for example, `Flask-Limiter` backed by Redis) before any public deployment that needs request throttling.
 - **Logging** defaults to `INFO`. Adjust `logging.basicConfig(level=...)` in the modules to suit your environment.
 - **Slide storage** is local-disk based. For multi-user or production deployments, swap `src/utils/slide_storage.py` for a database-backed implementation.
-- **Marp CLI** must be installed for HTML rendering; if missing the renderer falls back to a static HTML placeholder so the slide stays loadable (see `src/utils/migration.py` for the same fallback strategy during batch backfill).
+- **Marp CLI** must be installed for HTML rendering; if missing the renderer falls back to a static HTML placeholder so the slide stays loadable.
 
 ---
 

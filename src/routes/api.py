@@ -474,7 +474,7 @@ def api_update_saved_slide(slide_id):
 
 # NOTE: ``/api/compile_slides`` (legacy PPTX bundle with index slide) has
 # been removed. Multi-song decks are now built through the HTML pipeline
-# at ``POST /api/compile`` (see docs/MIGRATION.md).
+# at ``POST /api/compile``.
 
 @api_bp.route('/compile', methods=['POST'])
 def api_compile_html():
