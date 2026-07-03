@@ -102,6 +102,74 @@ def test_preview_endpoint_rejects_missing_song_payload():
     assert response.get_json()["error"] == "Song data is required"
 
 
+def test_preview_endpoint_injects_body_background_override(monkeypatch):
+    """Regression: Marp CLI strips ``body``-selector rules from the
+    frontmatter ``<style>`` block, so without post-render injection the
+    iframe body inherits ``body { background: #000 }`` and the embedded
+    preview looks like a black rectangle. The injection must therefore
+    land in the rendered HTML regardless of what Marp emits."""
+    rendered_html = (
+        '<html><head><style>section{color:#000;}</style></head>'
+        '<body><section>Hello</section></body></html>'
+    )
+
+    def fake_run(cmd, **kwargs):
+        output_path = Path(cmd[cmd.index("-o") + 1])
+        output_path.write_text(rendered_html, encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    response = make_client().post(
+        "/api/preview",
+        json={"song": make_song_payload(), "style": "practice"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert (
+        '<style>body { background: #ffffff; color: #111827; }</style>'
+        in payload["html_content"]
+    )
+    # Injected inside <head> so it parses before the body renders.
+    head_end = payload["html_content"].lower().find("</head>")
+    injection_idx = payload["html_content"].find(
+        '<style>body { background: #ffffff;'
+    )
+    assert 0 <= head_end < injection_idx
+
+
+def test_preview_endpoint_body_background_override_is_idempotent(monkeypatch):
+    """Calling the preview twice must not stack duplicate override blocks."""
+    rendered_html = (
+        '<html><head></head><body><section>Hi</section></body></html>'
+    )
+
+    def fake_run(cmd, **kwargs):
+        out = Path(cmd[cmd.index("-o") + 1])
+        out.write_text(rendered_html, encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    response = make_client().post(
+        "/api/preview",
+        json={"song": make_song_payload(), "style": "practice"},
+    )
+    assert response.status_code == 200
+    html = response.get_json()["html_content"]
+
+    response2 = make_client().post(
+        "/api/preview",
+        json={"song": make_song_payload(), "style": "practice"},
+    )
+    assert response2.status_code == 200
+    html2 = response2.get_json()["html_content"]
+
+    assert html.count("background: #ffffff;") == 1
+    assert html2.count("background: #ffffff;") == 1
+
+
 def test_regenerate_endpoint_returns_updated_html_warnings_and_slide_count(monkeypatch):
     def fake_run(cmd, **kwargs):
         output_path = Path(cmd[cmd.index("-o") + 1])

@@ -373,3 +373,14 @@ class TestCssInclusion:
         assert "<script>" not in result
         assert "&lt;script&gt;" in result
         assert "</style>" not in result or "&lt;/style&gt;" in result
+
+    def test_css_overrides_body_background_to_white(self):
+        """Regression: Marp's default theme sets ``body`` to ``#000``, which
+        turns the in-app preview iframe black when a section SVG doesn't
+        fully cover the viewport. The bundled CSS overrides this so the
+        embedded preview shows on a light surface."""
+        result = generate_marp(make_song())
+
+        css_block = result[result.index("<style>"):result.index("</style>") + len("</style>")]
+        assert "body" in css_block
+        assert "#ffffff" in css_block.lower() or "white" in css_block.lower()

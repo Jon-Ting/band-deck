@@ -185,6 +185,8 @@ test('next and previous navigate iframe slides and clamp to bounds', () => {
   assert.equal(preview.nextButton.disabled, true);
   assert.equal(slides[0].hidden, true);
   assert.equal(slides[1].hidden, false);
+  assert.equal(slides[1].classList.contains('bespoke-marp-active'), true);
+  assert.equal(slides[0].classList.contains('bespoke-marp-active'), false);
   assert.deepEqual(preview.iframe.contentWindow.messages.at(-1).message, {
     type: 'band-deck:navigate',
     slide: 1,
@@ -195,7 +197,32 @@ test('next and previous navigate iframe slides and clamp to bounds', () => {
   assert.equal(preview.currentSlide, 0);
   assert.equal(preview.previousButton.disabled, true);
   assert.equal(slides[0].hidden, false);
+  assert.equal(slides[0].classList.contains('bespoke-marp-active'), true);
+  assert.equal(slides[1].classList.contains('bespoke-marp-active'), false);
   assert.equal(slides[1].hidden, true);
+});
+
+test('_applySlideVisibility mirrors Marp bespoke-marp-active class on the active slide', () => {
+  const { preview } = makePreview();
+
+  preview.loadHtml(
+    '<svg data-marpit-svg=""><section>A</section></svg>' +
+      '<svg data-marpit-svg=""><section>B</section></svg>' +
+      '<svg data-marpit-svg=""><section>C</section></svg>',
+    { slideCount: 3 },
+  );
+  const slides = attachSlideDocument(preview, 3);
+
+  // Initial state: first slide is active per Marp's default theme rules.
+  assert.equal(slides[0].classList.contains('bespoke-marp-active'), true);
+  assert.equal(slides[1].classList.contains('bespoke-marp-active'), false);
+  assert.equal(slides[2].classList.contains('bespoke-marp-active'), false);
+
+  preview.goToSlide(2);
+
+  assert.equal(slides[0].classList.contains('bespoke-marp-active'), false);
+  assert.equal(slides[1].classList.contains('bespoke-marp-active'), false);
+  assert.equal(slides[2].classList.contains('bespoke-marp-active'), true);
 });
 
 test('presenter and fullscreen toggles expose mode state', async () => {
