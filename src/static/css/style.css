@@ -613,20 +613,6 @@
     margin-bottom: 0.25rem;
   }
 
-  /* Legacy PowerPoint Preview */
-  #legacy-pptx-preview {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: #f0f0f0;
-    border-radius: var(--border-radius);
-    border: 1px dashed #ccc;
-  }
-
-  #legacy-pptx-preview h3 {
-    color: #666;
-    font-style: italic;
-  }
-
   /* Arrangement editor */
   .arrangement-editor {
     margin-top: 1rem;

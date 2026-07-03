@@ -16,12 +16,12 @@ from src.utils.song_validator import (
 )
 from src.utils.slide_storage import (
     clear_temp_files,
-    compile_slides_with_index,
     delete_slide,
     get_slide,
     get_slide_file,
     list_slides,
     save_slide,
+    update_slide,
 )
 from src.utils.yaml_api import generate_yaml_response
 from src.utils.yaml_converter import infer_section_type
@@ -54,115 +54,22 @@ def search_song():
         return jsonify({'error': 'Song name is required'}), 400
     
     logger.info(f"Searching for song: '{song_name}' by '{artist_name}' in key '{target_key}'")
-    
+
     # Search Worship Together
     result = search_worship_together(song_name, artist_name, target_key=target_key if target_key else None)
-    
-    if result:
-        # Generate PowerPoint preview
-        try:
-            from src.utils.pptx_generator import PowerPointGenerator
-            ppt_gen = PowerPointGenerator()
-            ppt_gen.create_slide(result)
-            
-            # Add PowerPoint preview info to the result
-            result['pptx_preview'] = {
-                'title': result.get('title', 'Unknown Title'),
-                'artist': result.get('artist', 'Unknown Artist'),
-                'key': target_key,
-                'sections': []
-            }
-            
-            # Parse sections for preview
-            if 'content' in result:
-                sections = [s for s in result['content'].split('\n\n') if s.strip()]
-                for section in sections:
-                    lines = section.split('\n')
-                    if lines:
-                        section_header = lines[0].strip()
-                        section_content = '\n'.join(lines[1:]).strip()
-                        result['pptx_preview']['sections'].append({
-                            'header': section_header,
-                            'content': section_content
-                        })
-            result['key'] = target_key
-            return jsonify(result)
-        except Exception as e:
-            logger.error(f"Error generating PowerPoint preview: {str(e)}")
-            # Return result without preview if generation fails
-            return jsonify(result)
-    else:
+
+    if not result:
         return jsonify({'error': 'Song not found'}), 404
 
+    if target_key:
+        result['key'] = target_key
+    return jsonify(result)
 
-@api_bp.route('/download', methods=['GET'])
-def download_file():
-    """
-    Generate and download PowerPoint file
-    Required param: song (song name)
-    Optional param: artist (artist name)
-    Optional param: key (desired key)
 
-    Note: as of the HTML-focused redesign this endpoint is deprecated for
-    new users; the preferred format is ``/api/download/html``. Per Task
-    9.1 we emit a ``Deprecation`` header with a stable ``Sunset`` notice
-    so callers can plan around the eventual removal of PPTX exports.
-    """
-    song_name = request.args.get('song', '')
-    artist_name = request.args.get('artist', '')
-    target_key = request.args.get('key', '')
-
-    if not song_name:
-        return jsonify({'error': 'Song name is required'}), 400
-
-    # Get song data
-    song_data = search_worship_together(song_name, artist_name, target_key=target_key if target_key else None)
-
-    if song_data is not None:
-        song_data['key'] = target_key
-
-    if not song_data:
-        return jsonify({'error': 'Song not found'}), 404
-
-    # Generate PowerPoint file
-    try:
-        from src.utils.pptx_generator import generate_pptx_from_song_data
-        print("\n" + "="*50)
-        print(f"Generating PowerPoint for: {song_name}")
-        print(f"Artist: {artist_name}")
-        print(f"Key: {target_key}")
-        print("="*50 + "\n")
-
-        pptx_path = generate_pptx_from_song_data(song_data)
-
-        print("\n" + "="*50)
-        print(f"PowerPoint generated successfully: {pptx_path}")
-        print("="*50 + "\n")
-
-        response = send_file(
-            pptx_path,
-            as_attachment=True,
-            download_name=f"{song_data['title']} - Lyrics and Chords.pptx",
-            mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        )
-        # 12-month sunset window announced at 2026-07-03; PPTX remains
-        # available via this endpoint while the HTML pipeline matures but
-        # clients should plan to migrate to ``/api/download/html``.
-        response.headers['Deprecation'] = 'true'
-        response.headers['Sunset'] = '2027-07-03'
-        response.headers['Link'] = (
-            '</api/download/html>; rel="successor-version"; '
-            'title="HTML slide deck (recommended)"'
-        )
-        response.headers['X-Band-Deck-Deprecation-Notice'] = (
-            'PPTX export is legacy; HTML is the recommended format. '
-            'See docs/MIGRATION.md for the rollout plan.'
-        )
-        return response
-    except Exception as e:
-        print(f"\nERROR: {str(e)}")
-        logger.error(f"Error generating PowerPoint: {str(e)}")
-        return jsonify({'error': 'Failed to generate file'}), 500
+# NOTE: ``/api/download`` (the legacy PowerPoint stream-from-search endpoint)
+# has been removed. The recommended workflow is HTML/Marp via the dedicated
+# per-format endpoints (``/api/download/{format}``) and ``/api/preview``.
+# See docs/MIGRATION.md for the rollout plan and replacement paths.
 
 
 @api_bp.route('/health', methods=['GET'])
@@ -411,45 +318,44 @@ def api_regenerate_preview():
 def api_save_slide():
     """
     Save a slide in one or more formats.
-    
+
     Request body:
         song_data: dict - Song data containing metadata and content
         formats: list[str] - Optional list of formats to generate
-                           ('yaml', 'marp', 'html', 'pdf', 'pptx')
-                           Defaults to ['pptx'] for backward compatibility
-    
+                           ('yaml', 'marp', 'html', 'pdf')
+                           Defaults to ['yaml', 'marp', 'html']
+
     Returns:
         Metadata dict with 'id', 'title', 'artist', 'key', 'filenames',
         'created_at', 'updated_at', and optional fields
-    
+
     Requirements: 14.1, 14.2, 14.3
     """
     request_data = request.json
     if not request_data:
         return jsonify({'error': 'No data provided'}), 400
-    
-    # Extract song_data and formats from request
-    # Support both flat structure (backward compat) and nested structure
+
     if 'song_data' in request_data:
         song_data = request_data['song_data']
-        formats = request_data.get('formats', ['pptx'])
+        formats = request_data.get('formats')
     else:
-        # Assume entire request is song_data for backward compatibility
         song_data = request_data
-        formats = request_data.get('formats', ['pptx'])
-    
-    # Validate formats parameter
-    valid_formats = {'yaml', 'marp', 'html', 'pdf', 'pptx'}
+        formats = request_data.get('formats')
+
+    if formats is None:
+        formats = ['yaml', 'marp', 'html']
+
+    valid_formats = {'yaml', 'marp', 'html', 'pdf'}
     if not isinstance(formats, list):
         return jsonify({'error': 'formats must be a list'}), 400
-    
+
     invalid_formats = [f for f in formats if f not in valid_formats]
     if invalid_formats:
         return jsonify({
             'error': f'Invalid formats: {invalid_formats}',
             'valid_formats': list(valid_formats)
         }), 400
-    
+
     try:
         meta = save_slide(song_data, formats=formats)
         return jsonify(meta)
@@ -471,41 +377,40 @@ def api_list_slides():
     return jsonify(list_slides())
 
 @api_bp.route('/saved_slide/<slide_id>', methods=['GET'])
-def api_download_slide(slide_id):
+def api_legacy_unversioned_download(slide_id):
+    """Stub for the legacy unversioned ``/api/saved_slide/<id>`` download endpoint.
+
+    The endpoint used to default to PowerPoint; PowerPoint export is now
+    retired, so the stub returns 404 with an explanatory message pointing
+    callers to the per-format download route.
     """
-    Download a saved slide (backward compatibility - defaults to PPTX format).
-    
-    For multi-format downloads, use /api/saved_slide/{id}/download/{format}
-    """
-    path = get_slide_file(slide_id)
-    meta = get_slide(slide_id)
-    if not path or not meta:
-        return jsonify({'error': 'Slide not found'}), 404
-    return send_file(path, as_attachment=True, download_name=f"{meta['title']} - {meta['artist']}.pptx", mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+    return jsonify({
+        'error': 'unversioned download endpoint removed; '
+                 'use /api/saved_slide/<id>/download/<format>',
+        'available_formats': ['html', 'marp', 'yaml', 'pdf'],
+    }), 404
+
 
 @api_bp.route('/saved_slide/<slide_id>/download/<format>', methods=['GET'])
 def api_download_slide_format(slide_id, format):
     """
     Download a saved slide in a specific format.
-    
-    Supported formats: html, marp, yaml, pdf, pptx
-    
+
+    Supported formats: html, marp, yaml, pdf
+
     Requirements: 14.5
     """
-    # Validate format
-    valid_formats = {'html', 'marp', 'yaml', 'pdf', 'pptx'}
+    valid_formats = {'html', 'marp', 'yaml', 'pdf'}
     if format not in valid_formats:
         return jsonify({
             'error': f'Invalid format: {format}',
             'valid_formats': list(valid_formats)
         }), 400
-    
-    # Get slide metadata
+
     meta = get_slide(slide_id)
     if not meta:
         return jsonify({'error': 'Slide not found'}), 404
-    
-    # Check if the format exists
+
     file_path = get_slide_file(slide_id, format)
     if not file_path:
         available_formats = list(meta.get('filenames', {}).keys())
@@ -513,35 +418,31 @@ def api_download_slide_format(slide_id, format):
             'error': f'Format {format} not available for this slide',
             'available_formats': available_formats
         }), 404
-    
-    # Determine MIME type and extension
+
     mime_types = {
         'html': 'text/html',
         'marp': 'text/markdown',
         'yaml': 'text/yaml',
         'pdf': 'application/pdf',
-        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     }
-    
+
     extensions = {
         'html': 'html',
         'marp': 'marp.md',
         'yaml': 'yaml',
         'pdf': 'pdf',
-        'pptx': 'pptx'
     }
-    
+
     mime_type = mime_types.get(format, 'application/octet-stream')
     extension = extensions.get(format, format)
-    
-    # Build download filename
+
     title = meta.get('title', 'Untitled')
     artist = meta.get('artist', '')
     if artist:
         download_name = f"{title} - {artist}.{extension}"
     else:
         download_name = f"{title}.{extension}"
-    
+
     return send_file(
         file_path,
         as_attachment=True,
@@ -579,7 +480,6 @@ def api_update_saved_slide(slide_id):
         return jsonify({'error': 'No data provided'}), 400
     
     try:
-        from src.utils.slide_storage import update_slide
         meta = update_slide(slide_id, request_data)
         return jsonify(meta)
     except FileNotFoundError:
@@ -592,13 +492,9 @@ def api_update_saved_slide(slide_id):
         return jsonify({'error': 'Failed to update slide'}), 500
 
 
-@api_bp.route('/compile_slides', methods=['GET'])
-def api_compile_slides():
-    try:
-        path = compile_slides_with_index()
-        return send_file(path, as_attachment=True, download_name='All_Slides_Compiled.pptx', mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# NOTE: ``/api/compile_slides`` (legacy PPTX bundle with index slide) has
+# been removed. Multi-song decks are now built through the HTML pipeline
+# at ``POST /api/compile`` (see docs/MIGRATION.md).
 
 @api_bp.route('/compile', methods=['POST'])
 def api_compile_html():

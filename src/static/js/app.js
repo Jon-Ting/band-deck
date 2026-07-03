@@ -4,28 +4,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchButton = document.getElementById('search-button');
     const downloadButton = document.getElementById('download-button');
     const downloadFormatSelect = document.getElementById('download-format');
-    // Legacy PPTX button label: surfaces a small notice that the format
-    // is deprecated. The notice text is read by both keyboard and screen
-    // readers so users see the migration suggestion regardless of input
-    // modality.
-    if (downloadFormatSelect) {
-        const pptxOption = downloadFormatSelect.querySelector('option[value="pptx"]');
-        if (pptxOption && !pptxOption.dataset.deprecationNoticeAttached) {
-            pptxOption.dataset.deprecationNoticeAttached = 'true';
-            pptxOption.title = 'PPTX is legacy; HTML is recommended.';
-        }
-    }
     const errorMessage = document.getElementById('error-message');
-        const loadingIndicator = document.getElementById('loading');
-        const arrangementEditorContainer = document.getElementById('arrangement-editor-container');
-        const previewContainer = document.getElementById('preview-container');
-    const previewTitle = document.getElementById('preview-title');
-    const previewArtist = document.getElementById('preview-artist');
-    const previewLyrics = document.getElementById('preview-lyrics');
+    const loadingIndicator = document.getElementById('loading');
+    const arrangementEditorContainer = document.getElementById('arrangement-editor-container');
+    const previewContainer = document.getElementById('preview-container');
     const saveSlideButton = document.getElementById('save-slide-button');
     const savedSlidesContainer = document.getElementById('saved-slides-container');
     const savedSlidesList = document.getElementById('saved-slides-list');
-    const downloadAllButton = document.getElementById('download-all-button');
     const validationWarnings = document.getElementById('validation-warnings');
     const validationWarningsList = document.getElementById('validation-warnings-list');
     const validationErrors = document.getElementById('validation-errors');
@@ -34,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const overflowWarningsList = document.getElementById('overflow-warnings-list');
     const licensingReminders = document.getElementById('licensing-reminders');
     const licensingRemindersList = document.getElementById('licensing-reminders-list');
-    const downloadFormatSelect = document.getElementById('download-format');
 
     /**
      * Wire up the dismiss buttons for the validation panels. Each panel can
@@ -193,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 marp: 'Marp Markdown',
                 yaml: 'YAML Source',
                 pdf: 'PDF',
-                pptx: 'PowerPoint (Legacy)',
             };
             downloadButton.textContent = `Download ${formatLabels[format] || format.toUpperCase()}`;
         });
@@ -245,15 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalText = downloadButton.textContent;
             downloadButton.textContent = 'Generating...';
             
-            // Use the appropriate download endpoint based on format
-            if (format === 'pptx') {
-                // Legacy PowerPoint download
-                const key = document.getElementById('key').value.trim();
-                downloadPPTX(currentSongData.title, currentSongData.artist || '', key);
-            } else {
-                // New format downloads (HTML, Marp, YAML, PDF)
-                downloadFormat(format);
-            }
+            // New format downloads (HTML, Marp, YAML, PDF)
+            downloadFormat(format);
             
             // Reset button after a delay
             setTimeout(() => {
@@ -565,33 +541,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return yaml;
-    }
-    
-    // Function to download PowerPoint from backend (legacy)
-    function downloadPPTX(songName, artistName, key) {
-        console.log("\n" + "=".repeat(50));
-        console.log("Starting PowerPoint generation...");
-        console.log(`Song: ${songName}`);
-        console.log(`Artist: ${artistName || 'Not specified'}`);
-        console.log(`Key: ${key || 'Not specified'}`);
-        console.log("=".repeat(50) + "\n");
-        
-        const params = new URLSearchParams();
-        params.append('song', songName);
-        if (artistName) params.append('artist', artistName);
-        if (key) params.append('key', key);
-        
-        // Open in new tab to see console output
-        const downloadWindow = window.open(`/api/download?${params.toString()}`);
-        
-        // Check if download started
-        setTimeout(() => {
-            if (downloadWindow) {
-                console.log("PowerPoint generation completed!");
-                console.log("=".repeat(50) + "\n");
-            }
-        }, 2000);
-    }
+    }    // PPTX export has been removed from the application; see docs/MIGRATION.md
+    // for the rationale and the recommended HTML fallback workflow.
     
     // Function to show error message
     function showError(message) {
@@ -625,12 +576,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Download All button handler
-    if (downloadAllButton) {
-        downloadAllButton.addEventListener('click', function() {
-            window.open('/api/compile_slides');
-        });
-    }
+    // The "Download All" PowerPoint button was removed when PPTX export was
+    // deprecated; multi-slide decks are now produced through the HTML compile
+    // pipeline (/api/compile, see docs/MIGRATION.md).
 
     // Load and render saved slides
     function loadSavedSlides() {

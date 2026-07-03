@@ -1,10 +1,10 @@
-"""Batch migration utility for legacy PPTX-only saved slides.
+"""Batch migration utility for legacy saved slides.
 
-Legacy slides saved before the multi-format refactor only contain a single
-PowerPoint file plus metadata JSON. This utility backfills YAML, Marp
-markdown, and HTML files for any slide that lacks them so every saved slide
-participates in the multi-format workflow while remaining loadable
-(requirement 14.7).
+Slides saved before the multi-format refactor (and before PPTX export was
+retired) only carried a single primary artefact plus metadata JSON. This
+utility backfills YAML, Marp markdown, and HTML files for any slide that
+lacks them so every saved slide participates in the modern multi-format
+workflow (requirement 14.7).
 
 Design notes:
 
@@ -13,8 +13,9 @@ Design notes:
   brittle and was considered out of scope: the migration emits a placeholder
   ``Note`` section that carries song metadata and directs the user to
   re-generate from the chart source when the original lyrics and chords are
-  missing. The PPTX file itself is left untouched so any existing reader
-  still works.
+  missing. Any pre-existing ``.pptx`` filename listed in the metadata is
+  kept as a tombstone entry so legacy tooling that still references it
+  does not silently lose information.
 * The migration is idempotent. Slides whose ``filenames`` already list every
   supported format are skipped unless ``force=True`` is passed. Slides with
   a partial format set always have every format regenerated so partial
@@ -179,7 +180,7 @@ def _migrate_one(meta: dict[str, Any]) -> bool:
 
 
 def migrate_existing_slides(force: bool = False) -> dict[str, int]:
-    """Backfill YAML/Marp/HTML files for legacy PPTX-only saved slides.
+    """Backfill YAML/Marp/HTML files for legacy saved slides.
 
     Args:
         force: Regenerate every format even when it already exists. Use with

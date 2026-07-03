@@ -2,7 +2,33 @@ import logging
 import re
 import requests
 from bs4 import BeautifulSoup
-from .pptx_generator import format_worship_together_url
+
+
+
+def format_worship_together_url(song_name, artist):
+    """
+    Format a song name and artist into a Worship Together URL format.
+
+    Example: 'Goodness of God' by 'Bethel' becomes 'goodness-of-god-bethel'.
+    If artist is not specified, do not append the artist part.
+
+    Note: This helper lived in ``pptx_generator.py`` historically because
+    PPTX exports were the primary consumer. PPTX export has been removed
+    in favour of HTML/Marp, but the Worship Together scraper still uses
+    this function to build the URL it fetches, so it now lives next to the
+    scraper.
+    """
+    def clean_text(text):
+        text = text.lower()
+        text = re.sub(r'[^a-z0-9\s-]', '', text)
+        text = re.sub(r'\s+', '-', text)
+        return text.strip('-')
+
+    song_slug = clean_text(song_name)
+    artist_slug = clean_text(artist) if artist else ''
+    if artist_slug:
+        return f"https://www.worshiptogether.com/songs/{song_slug}-{artist_slug}/"
+    return f"https://www.worshiptogether.com/songs/{song_slug}/"
 
 
 
@@ -134,18 +160,14 @@ def get_note_index(note, use_flats=False):
         return scale.index(note)
     except ValueError:
         # Try enharmonic
-        if note == 'Db': return scale.index('C#')
-        if note == 'Eb': return scale.index('D#')
-        if note == 'Gb': return scale.index('F#')
-        if note == 'Ab': return scale.index('G#')
-        if note == 'Bb': return scale.index('A#')
-        if note == 'C#': return scale.index('Db')
-        if note == 'D#': return scale.index('Eb')
-        if note == 'F#': return scale.index('Gb')
-        if note == 'G#': return scale.index('Ab')
-        if note == 'A#': return scale.index('Bb')
+        enharmonic_map = {
+            'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb',
+        }
+        alternate = enharmonic_map.get(note)
+        if alternate is not None:
+            return scale.index(alternate)
         return -1
-
 def get_note_name(index, use_flats=False):
     scale = CHROMATIC_SCALE_FLATS if use_flats else CHROMATIC_SCALE_SHARPS
     return scale[index % 12]
