@@ -68,7 +68,7 @@
 
 ## Adding a New Song Source
 
-Currently only [Worship Together](https://www.worshiptogether.com/) is supported. To add a new source:
+Band-Deck uses pluggable chord/lyric scrapers — one is registered in `src/utils/search.py` and consumed by the `/api/search` route, others can be added alongside in the same module. PowerPoint export and the legacy `/api/download` endpoint are retired; per-format outputs flow through `/api/saved_slide/<id>/download/<format>`. To add a scraper for another public chord/lyric site:
 
 1. Add a new scraper in `src/utils/search.py` (or a new `src/utils/<source>_search.py`).
 2. Return the same dict shape as `search_song()`:
@@ -82,7 +82,7 @@ Currently only [Worship Together](https://www.worshiptogether.com/) is supported
        'original_key': str | None,
    }
    ```
-3. Wire it into the `/api/search` and `/api/download` endpoints in `api.py`.
+3. Wire it into `src/utils/search.py` (the source-registration seam that `/api/search` invokes).
 4. Document the new source in `docs/ARCHITECTURE.md`.
 
 ---

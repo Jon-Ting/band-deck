@@ -4,25 +4,26 @@ This file tracks significant design decisions made during development of Band-De
 
 ---
 
-## ADR-001 — Use Worship Together as the sole song source
+## ADR-001 — Pluggable multi-source scraping
 
 **Date**: Initial development  
 **Status**: Active
 
 ### Context
-Band-Deck needs a reliable source for songs with both lyrics and chords in a machine-parseable format. Most chord/lyric sites use inconsistent HTML or require accounts.
+Band-Deck needs reliable sources for songs with both lyrics and chords in a machine-parseable format, across many song genres. Most chord/lyric sites on the internet use inconsistent HTML, require accounts, or both, so the architecture is designed to be extended with additional pluggable scrapers, one at a time, as they become available.
 
 ### Decision
-Scrape [Worship Together](https://www.worshiptogether.com/) exclusively, parsing its `chord-pro-line` / `chord-pro-segment` HTML structure.
+Design the scraping layer so the app can pull lyrics and chords from any number of public chord/lyric sites on the internet. Ship one default scraper wired into `/api/search` so the rest of the pipeline can be validated end to end. Source registration lives behind a single seam (`src/utils/search.py`), so additional scrapers are added at that boundary without disturbing routes, validate, or slide generation.
 
 ### Rationale
-- WT uses a consistent, well-structured HTML chord-pro format that maps cleanly to aligned chord+lyric pairs.
-- It includes a `<meta property="cludo:originalKey">` tag, enabling key detection without manual parsing.
-- The target audience (worship musicians) overlaps heavily with WT's song catalogue.
+- A pluggable, multi-source architecture keeps the app usable for as wide a range of songs as possible instead of being locked to a single catalogue; many sources are expected to ship over the app's lifetime.
+- The boundary between scraping and the rest of the pipeline (`search_song` returning the same dict shape regardless of source) means new scrapers can be added without touching routes, validate, or slide generation.
+- Shipping one default scraper today (rather than building an upfront plugin registry) keeps the seam small until a second source is wired in, which is exactly what motivates a fuller registry.
 
 ### Trade-offs
-- Limited to songs available on WT; popular secular/rock songs are absent.
-- WT may change its HTML structure without notice, breaking the scraper.
+- Today's user-visible song catalogue mirrors whichever scrapers are wired in. Coverage widens as more scrapers ship, without further architectural change.
+- Any single source may change its HTML structure without notice, breaking that scraper. The pluggable shape limits the blast radius so only one scraper needs fixing at a time; `src/utils/search.py` keeps fetch, parse, and transposition separable for that reason.
+- The default scraper ships with two source-specific helpers — `format_worship_together_url()` and `extract_wt_chordpro_sections()` — whose names carry source-specific scope; deferring a rename or registry refactor until a second source is wired in keeps the change well-motivated.
 
 ---
 

@@ -7,16 +7,17 @@ from bs4 import BeautifulSoup
 
 def format_worship_together_url(song_name, artist):
     """
-    Format a song name and artist into a Worship Together URL format.
+    Format a song name and artist into a URL slug for the default
+    pluggable chord/lyric source.
 
     Example: 'Amazing Grace' by 'Traditional' becomes 'amazing-grace-traditional'.
     If artist is not specified, do not append the artist part.
 
-    Note: This helper lived in ``pptx_generator.py`` historically because
-    PPTX exports were the primary consumer. PPTX export has been removed
-    in favour of HTML/Marp, but the Worship Together scraper still uses
-    this function to build the URL it fetches, so it now lives next to the
-    scraper.
+    Note: The function name is preserved for historical reasons. When a
+    second scraper is wired in, the helper can be renamed (and moved
+    behind a per-source adapter) alongside the other source-specific
+    symbols called out in ADR-001 (Trade-offs). For now it lives here so
+    the default scraper can build the URL it fetches.
     """
     def clean_text(text):
         text = text.lower()
@@ -58,9 +59,16 @@ def is_repeat_instruction(line):
 
 def extract_wt_chordpro_sections(html, target_key=None, original_key=None):
     """
-    Extract and group content from <div class='chord-pro-line'>, combining segments into aligned chord and lyric lines, grouped into sections.
-    If target_key and original_key are provided, transpose the chords accordingly.
-    Returns a list of dicts: {name, lines: [chord_line, lyric_line, ...]}
+    Extract and group content from ``<div class='chord-pro-line'>``,
+    combining segments into aligned chord and lyric lines, grouped into
+    sections. If ``target_key`` and ``original_key`` are provided,
+    transpose the chords accordingly.
+
+    Returns a list of dicts: ``{name, lines: [chord_line, lyric_line, ...]}``.
+
+    Note: the function name is preserved until additional scrapers land
+    (see ADR-001, Trade-offs). New scrapers should ship with their own
+    per-source parse helper rather than reusing this one.
     """
     soup = BeautifulSoup(html, 'html.parser')
     lines = []
@@ -221,19 +229,25 @@ def clean_song_name_for_url(song_name):
     text = re.sub(r'-+', '-', text)
     return text.strip('-')
 
-def search_song(song_name, artist='', target_key=None, log_mode='pptx'):
+def search_song(song_name, artist='', target_key=None, log_mode='preview'):
     """
-    Search for a song on Worship Together website and extract chords/lyrics from chord-pro-line HTML.
-    If target_key is specified, transpose all chords to that key.
-    Returns the song data if found, None otherwise.
-    
-    log_mode: Controls which parts of the terminal logs are displayed.
-              'all': Display all parts (HTML extraction, chord transposition, pptx preview).
-              'html': Display only the extracted HTML info (Part 1).
-              'chords': Display only the original and transposed chords by sections (Part 2).
-              'pptx': Display only the pptx preview info (Part 3).
+    Search for a song on any registered public chord/lyric source and
+    extract chords/lyrics from its chord-pro HTML. If ``target_key`` is
+    specified, transpose all chords to that key. Returns the song data
+    if found, ``None`` otherwise.
+
+    ``log_mode``: controls which parts of the terminal logs are displayed.
+        - ``all``: all parts (HTML extraction, chord transposition, preview).
+        - ``html``: only the extracted HTML info.
+        - ``chords``: only the original and transposed chords by section.
+        - ``preview``: only the rendered-deck preview info.
     """
     try:
+        # Back-compat: the part-3 branch was historically labelled 'pptx'
+        # before PPTX export was retired. Map the legacy label to its
+        # replacement so any stale caller keeps logging Part 3 output.
+        if log_mode == 'pptx':
+            log_mode = 'preview'
         logger.info(f"Log mode is: {log_mode}")
         cleaned_song_name = clean_song_name_for_url(song_name)
         url = format_worship_together_url(cleaned_song_name, artist)
@@ -272,9 +286,9 @@ def search_song(song_name, artist='', target_key=None, log_mode='pptx'):
         artist_name = artist
         logger.info(f"Found song: {title}")
         
-        # Part 3: Display pptx preview info
-        if log_mode in ['all', 'pptx']:
-            logger.info("Pptx preview info:")
+        # Part 3: Display rendered-deck preview info
+        if log_mode in ['all', 'preview']:
+            logger.info("Preview info:")
             logger.info(f"Title: {title}")
             logger.info(f"Artist: {artist_name}")
             logger.info(f"Original Key: {original_key}")

@@ -25,11 +25,11 @@ _CHORD_SUFFIXES = ["", "m", "7", "maj7", "sus4", "m7", "dim", "add9"]
 
 def test_convert_to_yaml_preserves_metadata_and_prefers_search_name():
     song_data = {
-        "title": "Scraped Worship Together Title",
+        "title": "Scraped Source Title",
         "search_name": "Congregation Title",
         "artist": "Example Artist",
         "content": "Verse 1\n    G      D\nHow great is God",
-        "source_url": "https://www.worshiptogether.com/songs/example/",
+        "source_url": "https://example.com/songs/example/",
         "original_key": "G",
         "key": "D",
     }
@@ -40,7 +40,7 @@ def test_convert_to_yaml_preserves_metadata_and_prefers_search_name():
     assert result.authors == ["Example Artist"]
     assert result.original_key == "G"
     assert result.target_key == "D"
-    assert result.source_urls == ["https://www.worshiptogether.com/songs/example/"]
+    assert result.source_urls == ["https://example.com/songs/example/"]
     assert result.ccli_number is None
     assert result.copyright is None
     assert result.bpm is None

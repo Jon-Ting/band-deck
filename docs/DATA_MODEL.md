@@ -17,8 +17,8 @@ This is the central in-memory data structure passed between `search.py`, `yaml_c
     "search_name":  str,          # User's original search input (shown on slides)
     "artist":       str,          # Artist name (from search input, not scraped)
     "content":      str,          # Sectioned lyrics+chords (see Content Format below)
-    "source_url":   str,          # Canonical Worship Together URL
-    "original_key": str | None,   # Key detected from page meta tag
+    "source_url":   str,          # Canonical URL of the scraped source page
+    "original_key": str | None,   # Key detected from page meta tag / source-specific hooks
 
     # Added by the API layer (api.py)
     "key":          str | None,   # User-requested target key (post-transposition)

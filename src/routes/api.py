@@ -6,7 +6,7 @@ from src.utils.chordpro_parser import ChordPosition, ChordProLine, parse_chordpr
 from src.utils.compiler import CompilationError, compile_slides_html
 from src.utils.html_renderer import RenderError
 from src.utils.preview import SongValidationError, generate_preview, generate_regeneration
-from src.utils.search import search_song as search_worship_together
+from src.utils.search import search_song
 from src.utils.song_validator import (
     OverflowWarning,
     ValidationResult,
@@ -51,8 +51,8 @@ def search_song():
     
     logger.info(f"Searching for song: '{song_name}' by '{artist_name}' in key '{target_key}'")
 
-    # Search Worship Together
-    result = search_worship_together(song_name, artist_name, target_key=target_key if target_key else None)
+    # Search the registered chord/lyric sources.
+    result = search_song(song_name, artist_name, target_key=target_key if target_key else None)
 
     if not result:
         return jsonify({'error': 'Song not found'}), 404

@@ -2,7 +2,7 @@
 
 ## Application Overview
 
-Band-Deck is a web application that lets you quickly build musician-friendly slides with lyrics and chord notations. The application scrapes a single public source (contemporary-worship songs on Worship Together), turns the raw chart into a typed `SongYAML`, then renders it as a Marp markdown deck and an HTML slide preview. You edit the YAML live in the browser, save the slide as one or more formats (YAML, Marp markdown, HTML, optional PDF), redownload any saved format later, and combine saved slides into a single HTML deck for projection during services, concerts, rehearsals, or lessons.
+Band-Deck is a web application that lets you quickly build musician-friendly slides with lyrics and chord notations. The application uses pluggable chord/lyric scrapers and pulls lyrics and chords from any number of public chord/lyric sites on the internet. It turns the raw chart into a typed `SongYAML`, then renders it as a Marp markdown deck and an HTML slide preview. You edit the YAML live in the browser, save the slide as one or more formats (YAML, Marp markdown, HTML, optional PDF), redownload any saved format later, and combine saved slides into a single HTML deck for projection during services, concerts, rehearsals, or lessons.
 
 ## Features
 
@@ -47,15 +47,11 @@ Band-Deck is a web application that lets you quickly build musician-friendly sli
    - Open the compiled deck in any browser and use it during a full set without switching tabs
 
 7. **Start a New Search**:
-   - Type a new song name into the **Song Name** field and click **Generate Slide** to search for another song
+   - Type a new song name into the **Song Name** field and click "Generate Slide" to search for another song
 
 ## Data Sources
 
-The application currently scrapes one public source for lyrics and chords:
-
-1. **[Worship Together](https://www.worshiptogether.com/)** — Christian-worship songs with chord charts.
-
-Additional sources across more genres (pop, rock, folk, country) are planned; the scraper list lives in `src/utils/search.py`.
+Band-Deck is built around pluggable chord/lyric scrapers — lyrics and chords are pulled from public sites on the internet, one site at a time. The current build ships with one default scraper wired directly into `/api/search`; new sources register alongside it in `src/utils/search.py`.
 
 ## Legal Considerations
 

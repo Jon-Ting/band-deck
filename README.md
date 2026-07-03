@@ -236,7 +236,7 @@ For full legal terms (intended use, licensing responsibilities, redistribution, 
 
 ## 🙏 Acknowledgements
 
-- Current lyrics and chords are sourced from [Worship Together](https://www.worshiptogether.com/).
+- Band-Deck pulls lyrics and chords from any number of public chord/lyric sites on the internet; today a default scraper ships in `src/utils/search.py`.
 - HTML rendering powered by [Marp CLI](https://github.com/marp-team/marp-cli).
 - Built with [Flask](https://flask.palletsprojects.com/).
 

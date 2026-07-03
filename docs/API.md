@@ -30,7 +30,7 @@ curl "http://localhost:5000/api/search?song=Amazing%20Grace&artist=Traditional&k
   "search_name": "Amazing Grace",
   "artist": "Traditional",
   "content": "Verse 1\nG          Em\nI love You Lord\n...",
-  "source_url": "https://www.worshiptogether.com/songs/amazing-grace-traditional/",
+  "source_url": "https://example.com/songs/amazing-grace-traditional/",
   "original_key": "A",
   "key": "G",
   "pptx_preview": {

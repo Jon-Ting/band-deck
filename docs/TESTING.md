@@ -39,7 +39,9 @@ tests/
 | `test_successful_song_search` | `search_song()` happy path with a mocked 200 response |
 | `test_failed_song_search` | `search_song()` returns `None` on a network error (`RequestException`) |
 | `test_missing_elements` | `search_song()` returns `None` when the page lacks expected HTML structure |
-| `test_lyrics_extraction` | `search_song()` correctly extracts and structures sections from Worship Together HTML |
+| `test_lyrics_extraction` | `search_song()` correctly extracts and structures sections from source HTML (the current bootstrap source's chord-pro-line format) |
+
+> The `format_worship_together_url` helper name is preserved for now because it describes the current bootstrap source's URL pattern. New scrapers are expected to ship their own per-source slug helpers.
 
 ---
 
@@ -76,7 +78,7 @@ Chord transposition has many edge cases. When adding transposition tests, includ
 
 ## What to Test When Adding New Features
 
-### New Song Source
+### New Song Source (new scraper)
 - URL/slug generation for the new source
 - Successful parse of the expected HTML structure
 - Graceful failure (returns `None`) when the response is malformed

@@ -12,7 +12,7 @@ Flask App
        │
        ├── routes/api.py               ← HTTP boundary; thin handlers only
        │
-       ├── utils/search.py             ← Scraping + chord transposition
+       ├── utils/search.py             ← Pluggable chord/lyric scrapers + chord transposition
        ├── utils/yaml_converter.py     ← Raw chart data → typed SongYAML
        ├── utils/yaml_api.py           ← /generate_yaml response builder
        ├── utils/marp_generator.py     ← SongYAML → Marp markdown
@@ -36,9 +36,9 @@ Flask App
 - **Does not** contain business logic.
 
 ### `src/utils/search.py`
-- Fetches song HTML from Worship Together using a spoofed `User-Agent`.
-- Parses `<div class="chord-pro-line">` / `<div class="chord-pro-segment">` elements to extract interleaved chord + lyric pairs, grouped into named sections.
-- Transposes chords: reads the original key from `<meta property="cludo:originalKey">`, calculates semitone shift, and rewrites each chord symbol.
+- Fetches song HTML from any registered chord/lyric scraper, using a spoofed `User-Agent` per request. New sources register their own fetch + parse helpers; source selection lives in `search_song()`.
+- Parses `<div class="chord-pro-line">` / `<div class="chord-pro-segment">` elements (the granularity used by the current bootstrap source) to extract interleaved chord + lyric pairs, grouped into named sections.
+- Transposes chords: reads the original key from source metadata (the current bootstrap reads `<meta property="cludo:originalKey">`), calculates semitone shift, and rewrites each chord symbol.
 - Returns a plain dict; knows nothing about PowerPoint or HTTP.
 
 ### `src/utils/yaml_converter.py`
@@ -94,14 +94,14 @@ For Your mercy never fails me
 
 Chorus
 G    D    Em   C
-All my life You have been faithful
+All my life    You have been faithful
 ```
 
 ---
 
 ## Chord Transposition Algorithm
 
-1. Extract `original_key` from the Worship Together page meta tag.
+1. Extract `original_key` from the scraped page (the active scraper exposes it however its source page provides it).
 2. Compute `semitones = (target_index - original_index) % 12` using the chromatic scale.
 3. For each chord token (regex `[A-G][b#]?...`):
    - Split on `/` to handle bass notes (e.g. `C/G → E/B`).
@@ -157,7 +157,7 @@ data/saved_slides/
 
 | Area | Current | Future Option |
 |------|---------|--------------|
-| Song source | Worship Together only | Add more sources (e.g. Ultimate Guitar, OpenSong) |
+| Song source | Pluggable chord/lyric scrapers, one wired in by default | Add more public chord/lyric sources (e.g. Ultimate Guitar, OpenSong, Chordie) |
 | Storage | Local disk | Swap `slide_storage.py` for a DB-backed implementation |
 | Rate limiting | Disabled | Flask-Limiter + Redis |
 | Multi-user | Not supported | Session-scoped slide libraries |

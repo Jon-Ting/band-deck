@@ -31,7 +31,8 @@ class TestSearchFunctionality(unittest.TestCase):
     @patch('requests.get')
     def test_successful_song_search(self, mock_get):
         """Test successful song search with mocked response"""
-        # Mock HTML content with Worship Together chord-pro-line structure
+        # Mock HTML content with chord-pro-line structure (the current bootstrap source's HTML format)
+
         mock_html = """
         <html>
             <body>
@@ -109,8 +110,8 @@ class TestSearchFunctionality(unittest.TestCase):
 
     @patch('requests.get')
     def test_lyrics_extraction(self, mock_get):
-        """Test lyrics extraction with Worship Together chord-pro-line structure"""
-        # Mock HTML content with Worship Together chord-pro-line segments
+        """Test lyrics extraction with source chord-pro-line structure"""
+        # Mock HTML content with source chord-pro-line segments
         mock_html = """
         <html>
             <body>
