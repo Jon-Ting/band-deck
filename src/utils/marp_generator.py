@@ -166,6 +166,11 @@ def _css_template(options: MarpOptions, sidebar_ratio: str) -> str:
     font_size_css = html.escape(font_size_raw, quote=False) or "24px"
 
     return f"""<style>
+/* Override Marp's default theme ``body {{ background: #000; }}``. Our CSS is
+appended after Marp's in document order, so this wins by cascade and keeps
+the embedded preview iframe on a light surface even where slide SVGs don't
+fully cover the viewport. */
+body {{ background: #ffffff; color: #111827; }}
 section {{ font-family: Arial, sans-serif; color: #111827; padding: 34px 42px; }}
 h1 {{ color: #1d4ed8; font-size: 44px; margin: 0 0 12px; }}
 h2 {{ color: #1d4ed8; font-size: 36px; margin: 0 0 10px; }}

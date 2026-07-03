@@ -57,12 +57,46 @@ def _render_song_preview(song: SongYAML, payload: dict[str, Any]) -> dict[str, A
         rendered_path = render_html(marp_markdown, output_path=html_path)
         html_content = Path(rendered_path).read_text(encoding="utf-8")
 
+    # Marp CLI strips body-selector rules from the frontmatter `<style>`
+    # block (they never reach the rendered HTML), so we inject a fresh
+    # <style> just before </head> after rendering. Without this override
+    # the iframe body inherits Marp's default-theme ``#000`` and the
+    # in-app preview looks like a black rectangle.
+    html_content = _inject_preview_css_overrides(html_content)
+
     return {
         "html_content": html_content,
         "marp_markdown": marp_markdown,
         "warnings": warnings,
         "slide_count": _slide_count(song),
     }
+
+
+def _inject_preview_css_overrides(html_content: str) -> str:
+    """Pin the embedded preview iframe body to a light surface.
+
+    Idempotent: does nothing if the override block is already present.
+    Falls back to ``<body`` / end-of-document insertion when the rendered
+    HTML lacks a ``</head>`` tag.
+    """
+    override_block = (
+        '<style>body { background: #ffffff; color: #111827; }</style>'
+    )
+    if override_block in html_content:
+        return html_content
+
+    lowered = html_content.lower()
+    head_end = lowered.find("</head>")
+    if head_end != -1:
+        return html_content[:head_end] + override_block + html_content[head_end:]
+
+    body_start = lowered.find("<body")
+    if body_start != -1:
+        insert_at = body_start + len("<body")
+        if html_content[insert_at] in (">", " "):
+            return html_content[: insert_at + 1] + override_block + html_content[insert_at + 1:]
+
+    return html_content + override_block
 
 
 def _validate_song_for_regeneration(song: SongYAML) -> dict[str, Any]:

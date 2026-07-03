@@ -462,7 +462,7 @@ def api_update_saved_slide(slide_id):
     Request body:
         song: dict - Modified song YAML data
         formats: list[str] - Optional list of formats to regenerate
-                           ('yaml', 'marp', 'html', 'pdf', 'pptx')
+                           ('yaml', 'marp', 'html', 'pdf')
                            Defaults to all existing formats
     
     Returns:

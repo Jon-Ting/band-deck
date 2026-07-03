@@ -214,6 +214,7 @@
                 if (slide.dataset) {
                     slide.dataset.bandDeckActive = String(isActive);
                 }
+                slide.classList.toggle('bespoke-marp-active', isActive);
             });
         }
 
