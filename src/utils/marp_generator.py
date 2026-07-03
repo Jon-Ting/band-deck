@@ -5,7 +5,7 @@ from __future__ import annotations
 import html
 from dataclasses import dataclass
 
-from src.utils.chordpro_parser import ChordProLine, pretty_print_chordpro
+from src.utils.chordpro_parser import ChordProLine
 from src.utils.yaml_models import SongSection, SongYAML
 
 
@@ -16,7 +16,7 @@ class MarpOptions:
     show_song_map: bool = True
     show_metadata: bool = True
     show_practice_notes: bool = True
-    font_size: str = "24px"
+    font_size: str = "22px"
     aspect_ratio: str = "16:9"
 
 
@@ -34,7 +34,7 @@ STYLE_PRESETS: dict[str, dict[str, object]] = {
         "show_song_map": True,
         "show_metadata": True,
         "show_practice_notes": True,
-        "font_size": "24px",
+        "font_size": "22px",
         "sidebar_ratio": "0.9fr",
         "song_map_on_section_slides": True,
         "show_general_cue_box": True,
@@ -138,8 +138,37 @@ def generate_marp(
 
 
 def format_chordpro_line(line: ChordProLine) -> str:
-    """Pretty print a ChordPro line with inline chord spans."""
-    return pretty_print_chordpro(line, "html")
+    """Render a ChordPro line as aligned chord and lyric rows."""
+    rows: list[str] = []
+
+    if line.chords:
+        rows.append(
+            '<div class="chord-row">'
+            f'<span class="chord">{_escape(_format_chord_row(line))}</span>'
+            "</div>"
+        )
+
+    if line.text or not line.chords:
+        rows.append(
+            '<div class="lyric-row">'
+            f'<span class="lyric">{_escape(line.text)}</span>'
+            "</div>"
+        )
+
+    return "".join(rows)
+
+
+def _format_chord_row(line: ChordProLine) -> str:
+    """Build a monospace chord row from character positions."""
+    chord_parts: list[str] = []
+    last_pos = 0
+
+    for chord_pos in sorted(line.chords, key=lambda c: c.position):
+        chord_parts.append(" " * max(chord_pos.position - last_pos, 0))
+        chord_parts.append(chord_pos.chord)
+        last_pos = chord_pos.position + len(chord_pos.chord)
+
+    return "".join(chord_parts)
 
 
 def _assemble_marp_document(slides: list[str], options: MarpOptions, style: str) -> str:
@@ -176,7 +205,10 @@ h2 {{ color: #1d4ed8; font-size: 36px; margin: 0 0 10px; }}
 .meta {{ display: flex; flex-wrap: wrap; gap: 18px; font-size: 18px; font-weight: 700; border-bottom: 2px solid #d1d5db; padding-bottom: 8px; margin-bottom: 16px; }}
 .layout {{ display: grid; grid-template-columns: 2.1fr {sidebar_ratio}; gap: 22px; }}
 .layout--solo {{ display: block; }}
-.line {{ font-family: "Courier New", monospace; font-size: {font_size_css}; line-height: 1.3; margin: 10px 0; }}
+.line {{ font-family: "Courier New", monospace; font-size: {font_size_css}; line-height: 1.25; margin: 10px 0; }}
+.chord-row, .lyric-row {{ white-space: pre; }}
+.chord-row {{ min-height: 1em; line-height: 1; }}
+.lyric-row {{ line-height: 1.25; }}
 .chord {{ color: #c2410c; font-weight: 800; }}
 .lyric {{ color: #111827; }}
 .song-map {{ font-size: 18px; line-height: 1.5; }}
@@ -241,7 +273,7 @@ def _generate_section_slide(
         parts.append(_metadata_bar(song))
 
     lines_html = "\n".join(
-        f'<div class="line"><span class="lyric">{format_chordpro_line(line)}</span></div>'
+        f'<div class="line">{format_chordpro_line(line)}</div>'
         for line in section.lines
     )
 
@@ -296,9 +328,7 @@ def _metadata_bar(song: SongYAML) -> str:
         ("Capo", song.capo or "none"),
     ]
     spans = [
-        f"<span>{label}: {_escape(value)}</span>"
-        for label, value in metadata
-        if value
+        f"<span>{label}: {_escape(value)}</span>" for label, value in metadata if value
     ]
     return f'<div class="meta">{"".join(spans)}</div>'
 
