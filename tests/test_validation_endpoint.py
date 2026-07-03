@@ -80,9 +80,8 @@ class TestSearchToHtmlPipeline:
         for section_name in song.arrangement:
             assert section_name in marp, f"Section {section_name} missing from Marp"
 
-        # Chord symbols must appear inline as <span class=\"chord\"> spans.
-        assert '<span class="chord">G</span>' in marp
-        assert '<span class="chord">D</span>' in marp
+        # Chord symbols must appear in positioned chord rows.
+        assert '<span class="chord">G       D</span>' in marp
         assert '<span class="chord">C</span>' in marp
         assert '<span class="chord">Em</span>' in marp
 
@@ -93,17 +92,15 @@ class TestEditWorkflow:
     def test_chord_edit_propagates_into_marp(self):
         song = _build_song()
         marp_before = generate_marp(song)
-        assert '<span class="chord">G</span>' in marp_before
+        assert '<span class="chord">G       D</span>' in marp_before
 
         # Edit: transpose the Verse 1 line by replacing the root.
         song.sections["Verse 1"].lines[0].chords[0] = ChordPosition(
             chord="A", position=0
         )
         marp_after = generate_marp(song)
-        assert '<span class="chord">A</span>' in marp_after
-        assert '<span class="chord">G</span>' not in marp_after.replace(
-            '<span class="chord">D</span>', ""
-        )
+        assert '<span class="chord">A       D</span>' in marp_after
+        assert '<span class="chord">G       D</span>' not in marp_after
 
     def test_section_addition_propagates_into_marp(self):
         song = _build_song()

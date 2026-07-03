@@ -115,8 +115,10 @@ def test_edit_chord_then_regenerate_reflects_change(monkeypatch):
     base_payload = _song_with_single_section()
 
     # Original regenerate uses the C major chord on the first line
-    initial = client.post("/api/regenerate", json={"song": base_payload, "style": "practice"}).get_json()
-    assert '<span class="chord">C</span>' in initial["marp_markdown"]
+    initial = client.post(
+        "/api/regenerate", json={"song": base_payload, "style": "practice"}
+    ).get_json()
+    assert '<span class="chord">G       C          G</span>' in initial["marp_markdown"]
     assert initial["slide_count"] == 2  # title + Verse 1
 
     # Simulate the editor changing C→D on the first line
@@ -132,11 +134,16 @@ def test_edit_chord_then_regenerate_reflects_change(monkeypatch):
             },
         },
     }
-    updated = client.post("/api/regenerate", json={"song": edited, "style": "practice"}).get_json()
+    updated = client.post(
+        "/api/regenerate", json={"song": edited, "style": "practice"}
+    ).get_json()
 
-    # The C→D edit must remove the C span and add a D span in the expected place
-    assert '<span class="chord">C</span>' not in updated["marp_markdown"]
-    assert '<span class="chord">D</span>grace' in updated["marp_markdown"]
+    # The C→D edit must remove the C chord row and add D at the expected column.
+    assert (
+        '<span class="chord">G       C          G</span>'
+        not in updated["marp_markdown"]
+    )
+    assert '<span class="chord">G       D          G</span>' in updated["marp_markdown"]
     # Chord-only edits must not change slide count
     assert updated["slide_count"] == initial["slide_count"]
 
@@ -175,8 +182,12 @@ def test_warnings_are_consistent_across_preview_and_regenerate(monkeypatch):
 
     expected_warning = ["Arrangement references missing section: Bridge"]
 
-    preview = client.post("/api/preview", json={"song": song, "style": "practice"}).get_json()
-    regen = client.post("/api/regenerate", json={"song": song, "style": "practice"}).get_json()
+    preview = client.post(
+        "/api/preview", json={"song": song, "style": "practice"}
+    ).get_json()
+    regen = client.post(
+        "/api/regenerate", json={"song": song, "style": "practice"}
+    ).get_json()
 
     # Warnings propagate to both endpoints because both surface _preview_warnings
     assert preview["warnings"] == expected_warning

@@ -182,4 +182,4 @@ validation:
     assert marp.startswith("---\nmarp: true")
     assert "# Example Song" in marp
     assert "## Verse 1" in marp
-    assert '<span class="chord">G</span>' in marp
+    assert '<div class="chord-line">G</div>' in marp

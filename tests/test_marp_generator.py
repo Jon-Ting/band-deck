@@ -75,17 +75,24 @@ def test_generate_marp_includes_frontmatter_css_and_title_slide_metadata():
     assert "Watch the push into the chorus" in result
 
 
-def test_generate_marp_creates_section_slides_with_inline_chords_and_cues():
+def test_generate_marp_creates_section_slides_with_aligned_chords_and_cues():
     result = generate_marp(make_song())
 
     assert result.count("\n---\n##") == 3
     assert "## Verse 1" in result
     assert "## Chorus" in result
-    assert '<span class="chord">D</span>Placeholder lyric line' in result
+    assert '<div class="chord-row"><span class="chord">D</span></div>' in result
     assert (
-        '<span class="chord">G</span>Lift the '
-        '<span class="chord">A</span>placeholder hook'
-    ) in result
+        '<div class="chord-row"><span class="chord">G        A</span></div>' in result
+    )
+    assert (
+        '<div class="lyric-row"><span class="lyric">Placeholder lyric line</span></div>'
+        in result
+    )
+    assert (
+        '<div class="lyric-row"><span class="lyric">Lift the placeholder hook</span></div>'
+        in result
+    )
     assert '<span class="current">Verse 1</span> &rarr; Chorus &rarr; Verse 1' in result
     assert 'Verse 1 &rarr; <span class="current">Chorus</span> &rarr; Verse 1' in result
     assert "Next: Chorus" in result
@@ -206,13 +213,35 @@ class TestSectionSlideStructure:
         assert "## Verse 1" in result
         assert "## Chorus" in result
 
-    def test_section_slide_contains_lyrics_with_inline_chords(self):
+    def test_section_slide_contains_lyrics_with_aligned_chords(self):
         song = make_song()
         result = generate_marp(song)
 
-        assert '<span class="chord">D</span>Placeholder lyric line' in result
+        assert '<div class="chord-row"><span class="chord">D</span></div>' in result
+        assert (
+            '<div class="lyric-row"><span class="lyric">Placeholder lyric line</span></div>'
+            in result
+        )
         assert '<span class="lyric">' in result
         assert '<div class="line">' in result
+
+    def test_section_slide_preserves_chord_positions_as_spaced_rows(self):
+        song = make_song()
+        song.sections["Verse 1"].lines[0] = ChordProLine(
+            text="Who else commands the time",
+            chords=[ChordPosition("Bm", 4), ChordPosition("G", 22)],
+        )
+        result = generate_marp(song)
+
+        assert (
+            '<div class="chord-row"><span class="chord">    Bm                G</span></div>'
+            in result
+        )
+        assert (
+            '<div class="lyric-row"><span class="lyric">Who else commands the time</span></div>'
+            in result
+        )
+        assert 'Who <span class="chord">Bm</span>else' not in result
 
     def test_section_slide_contains_metadata_bar_by_default(self):
         song = make_song()
@@ -236,9 +265,15 @@ class TestSectionSlideStructure:
         result = generate_marp(song)
 
         # First section (Verse 1) should be highlighted
-        assert '<span class="current">Verse 1</span> &rarr; Chorus &rarr; Verse 1' in result
+        assert (
+            '<span class="current">Verse 1</span> &rarr; Chorus &rarr; Verse 1'
+            in result
+        )
         # Second section (Chorus) should be highlighted
-        assert 'Verse 1 &rarr; <span class="current">Chorus</span> &rarr; Verse 1' in result
+        assert (
+            'Verse 1 &rarr; <span class="current">Chorus</span> &rarr; Verse 1'
+            in result
+        )
 
     def test_section_slide_hides_song_map_when_disabled(self):
         song = make_song()
@@ -300,9 +335,7 @@ class TestSectionSlideStructure:
         assert "C<" not in result
         assert "C&lt;" in result
 
-    @pytest.mark.parametrize(
-        "style", ["practice", "performance", "simple"]
-    )
+    @pytest.mark.parametrize("style", ["practice", "performance", "simple"])
     def test_generate_marp_accepts_all_styles(self, style):
         song = make_song()
         result = generate_marp(song, style=style)
@@ -342,7 +375,7 @@ class TestCssInclusion:
     def test_css_uses_default_font_size(self):
         result = generate_marp(make_song())
 
-        assert "font-size: 24px" in result
+        assert "font-size: 22px" in result
 
     def test_css_uses_custom_font_size(self):
         song = make_song()
@@ -350,7 +383,7 @@ class TestCssInclusion:
         result = generate_marp(song, options=options)
 
         assert "font-size: 32px" in result
-        assert "font-size: 24px" not in result
+        assert "font-size: 22px" not in result
 
     def test_css_uses_default_aspect_ratio(self):
         result = generate_marp(make_song())
@@ -381,6 +414,8 @@ class TestCssInclusion:
         embedded preview shows on a light surface."""
         result = generate_marp(make_song())
 
-        css_block = result[result.index("<style>"):result.index("</style>") + len("</style>")]
+        css_block = result[
+            result.index("<style>") : result.index("</style>") + len("</style>")
+        ]
         assert "body" in css_block
         assert "#ffffff" in css_block.lower() or "white" in css_block.lower()
