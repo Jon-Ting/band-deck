@@ -34,7 +34,7 @@ This plan implements the redesign of Band-Deck from a PowerPoint-focused applica
     - Implement HTML escaping for safe rendering
     - _Requirements: 5.4_
   
-  - [-] 1.5 Create YAML data models and schema
+  - [x] 1.5 Create YAML data models and schema
     - Define `SongYAML`, `SongSection`, `SongMetadata` dataclasses in `src/utils/yaml_models.py`
     - Add pyyaml dependency to pyproject.toml
     - Add jsonschema dependency for validation
