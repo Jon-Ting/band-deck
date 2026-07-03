@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify, send_file
-import time
-import os
 import logging
-import tempfile
 from src.utils.search import search_song as search_worship_together
+from src.utils.html_renderer import RenderError
+from src.utils.preview import SongValidationError, generate_preview, generate_regeneration
 from src.utils.slide_storage import save_slide, list_slides, get_slide, delete_slide, get_slide_file, compile_slides_with_index, clear_temp_files
+from src.utils.yaml_api import generate_yaml_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -122,6 +122,49 @@ def download_file():
         print(f"\nERROR: {str(e)}")
         logger.error(f"Error generating PowerPoint: {str(e)}")
         return jsonify({'error': 'Failed to generate file'}), 500
+
+@api_bp.route('/generate_yaml', methods=['POST'])
+def api_generate_yaml():
+    """Generate structured song YAML data from metadata and chart data."""
+    song_data = request.get_json(silent=True)
+    if not song_data:
+        return jsonify({'error': 'No song data provided'}), 400
+
+    try:
+        return jsonify(generate_yaml_response(song_data))
+    except Exception as e:
+        logger.error(f"Error generating YAML: {str(e)}")
+        return jsonify({'error': 'Failed to generate YAML'}), 500
+
+@api_bp.route('/preview', methods=['POST'])
+def api_generate_preview():
+    """Generate rendered HTML preview content from structured song YAML data."""
+    try:
+        return jsonify(generate_preview(request.get_json(silent=True) or {}))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except RenderError as e:
+        logger.error(f"Error rendering HTML preview: {str(e)}")
+        return jsonify({'error': 'Failed to render preview'}), 500
+    except Exception as e:
+        logger.error(f"Error generating HTML preview: {str(e)}")
+        return jsonify({'error': 'Failed to generate preview'}), 500
+
+@api_bp.route('/regenerate', methods=['POST'])
+def api_regenerate_preview():
+    """Regenerate rendered HTML preview content from edited song YAML data."""
+    try:
+        return jsonify(generate_regeneration(request.get_json(silent=True) or {}))
+    except SongValidationError as e:
+        return jsonify({'error': str(e), 'validation': e.validation}), 400
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except RenderError as e:
+        logger.error(f"Error rendering regenerated HTML preview: {str(e)}")
+        return jsonify({'error': 'Failed to render preview'}), 500
+    except Exception as e:
+        logger.error(f"Error regenerating HTML preview: {str(e)}")
+        return jsonify({'error': 'Failed to regenerate preview'}), 500
 
 @api_bp.route('/save_slide', methods=['POST'])
 def api_save_slide():
