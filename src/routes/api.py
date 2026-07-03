@@ -34,10 +34,6 @@ logger = logging.getLogger(__name__)
 # Create blueprint
 api_bp = Blueprint('api', __name__)
 
-# Rate limiting dictionary
-request_timestamps = {}
-RATE_LIMIT_SECONDS = 5  # Time between requests to same source
-
 @api_bp.route('/search', methods=['GET'])
 def search_song():
     """
