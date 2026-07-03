@@ -1,0 +1,146 @@
+# Example input structure. Lyrics are placeholders; insert licensed/user-supplied
+# lyrics before generating a real rehearsal deck.
+request:
+  title: Amazing Grace
+  search_name: Amazing Grace
+  artist: John Newton
+  requested_key: G
+  requested_outputs:
+    - yaml
+    - marp
+    - html
+
+metadata:
+  title: Amazing Grace
+  search_name: Amazing Grace
+  artist: John Newton
+  canonical_title: Amazing Grace
+  authors:
+    - John Newton
+  license_number: unknown
+  copyright: "Public domain (written 1772). Confirm source clarity before redistribution."
+  original_key: unknown
+  target_key: G
+  bpm: unknown
+  time_signature: 4/4
+  capo: none
+  highest_note: unknown
+  lowest_note: unknown
+  source_urls:
+    - https://en.wikipedia.org/wiki/Amazing_Grace
+  confidence: requires-review
+  notes:
+    - Lyrics intentionally omitted from this portable example; insert
+      public-domain or user-supplied lyrics before generating a real rehearsal deck.
+
+sources:
+  metadata:
+    - label: User-provided placeholder
+      confidence: uncertain
+      copyright_sensitive: false
+  lyrics_chords:
+    - label: Public-domain hymn (1772)
+      confidence: uncertain
+      copyright_sensitive: false
+      notes: Replace placeholders with public-domain or user-supplied lyrics.
+  arrangement:
+    - label: Demonstration arrangement
+      confidence: uncertain
+      copyright_sensitive: false
+
+normalised_chordpro:
+  source_format: structured
+  transposition:
+    requested: false
+    from_key: unknown
+    to_key: G
+    method: null
+    review_required: true
+  sections:
+    IntroTurn:
+      type: instrumental
+      display_title: Intro / Turnaround
+      lyric_status: instrumental
+      repeat: 2
+      bars:
+        - [G, D, C, G]
+      lines: []
+    Verse:
+      type: verse
+      display_title: Verse
+      lyric_status: placeholder
+      lines:
+        - chordpro: "[G]<licensed verse line 1>"
+        - chordpro: "[C]<licensed verse line 2>"
+        - chordpro: "[G]<licensed verse line 3>"
+        - chordpro: "[D]<licensed verse line 4>"
+    Ending:
+      type: ending
+      display_title: Ending
+      lyric_status: placeholder
+      lines:
+        - chordpro: "[G]<licensed ending line>"
+
+arrangement:
+  source: generated
+  sequence:
+    - section: IntroTurn
+      label: Intro x2
+      cue: 1 bar per chord
+    - section: Verse
+      label: Verse 1
+      cue: Restrained
+    - section: Verse
+      label: Verse 2
+      cue: Add harmony
+    - section: Verse
+      label: Verse 3
+      cue: Build slightly
+    - section: Verse
+      label: Verse 4
+      cue: Full band
+    - section: Ending
+      cue: Stop together
+
+render:
+  mode: practice
+  chord_layout: above_lyrics
+  show_full_song_map: false
+  show_pagination: false
+  overflow_strategy: split
+  max_line_pairs_per_slide: 6
+  min_lyric_font_px: 28
+  min_chord_font_px: 22
+  continuation_labels: true
+  theme: band_deck_light
+
+deck:
+  output_formats:
+    - yaml
+    - marp
+    - html
+  style: band_deck_light
+  slides:
+    include_overview: true
+    include_final_review: false
+    density: standard
+
+validation:
+  status: draft
+  human_review_required:
+    - Replace placeholder lyrics/chords with public-domain or user-supplied material.
+    - Verify metadata and arrangement before use.
+
+verification:
+  lyrics: unverified
+  chords: unverified
+  ccli: unverified
+  checked_by: null
+  checked_date: null
+
+practice_notes:
+  general:
+    - Restrained opening; build dynamics through the verses.
+    - Substitute <licensed verse line 1> with the public-domain lyric before rehearsal.
+  Ending:
+    - Stop together on the final chord.

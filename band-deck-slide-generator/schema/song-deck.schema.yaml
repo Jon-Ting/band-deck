@@ -1,0 +1,508 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://example.com/band-deck-slide-generator/song-deck.schema.yaml"
+title: "Band Deck Canonical Song Deck"
+description: >
+  Canonical YAML shape for the Band Deck Slide Generator pipeline:
+  user request, metadata sourcing, lyrics/chords sourcing, ChordPro
+  normalisation, arrangement, deck generation, rendering, and validation.
+type: object
+required:
+  - request
+  - metadata
+  - sources
+  - normalised_chordpro
+  - arrangement
+additionalProperties: true
+properties:
+  request:
+    type: object
+    required:
+      - title
+    additionalProperties: true
+    properties:
+      title:
+        type: string
+        minLength: 1
+      artist:
+        type:
+          - string
+          - "null"
+      provided_metadata:
+        type: object
+        additionalProperties: true
+      requested_key:
+        $ref: "#/$defs/keyOrUnknown"
+      requested_outputs:
+        type: array
+        items:
+          $ref: "#/$defs/outputFormat"
+      search_name:
+        type:
+          - string
+          - "null"
+
+  metadata:
+    type: object
+    required:
+      - title
+      - authors
+      - target_key
+    additionalProperties: true
+    properties:
+      title:
+        type: string
+        minLength: 1
+      canonical_title:
+        type:
+          - string
+          - "null"
+      alternate_titles:
+        type: array
+        items:
+          type: string
+      authors:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      license_number:
+        type:
+          - string
+          - integer
+          - "null"
+      copyright:
+        type:
+          - string
+          - "null"
+      original_key:
+        $ref: "#/$defs/keyOrUnknown"
+      target_key:
+        $ref: "#/$defs/keyOrUnknown"
+      bpm:
+        anyOf:
+          - type: integer
+            minimum: 20
+            maximum: 260
+          - type: number
+            minimum: 20
+            maximum: 260
+          - type: string
+          - type: "null"
+      time_signature:
+        type:
+          - string
+          - "null"
+        pattern: "^(unknown|[0-9]+/[0-9]+)?$"
+      capo:
+        type:
+          - string
+          - integer
+          - "null"
+      confidence:
+        type: string
+        enum:
+          - confirmed
+          - inferred
+          - unknown
+          - requires-review
+      search_name:
+        type:
+          - string
+          - "null"
+      artist:
+        type:
+          - string
+          - "null"
+      highest_note:
+        $ref: "#/$defs/pitchNotation"
+      lowest_note:
+        $ref: "#/$defs/pitchNotation"
+      source_urls:
+        type: array
+        items:
+          type: string
+      notes:
+        $ref: "#/$defs/stringList"
+
+  sources:
+    type: object
+    required:
+      - metadata
+      - lyrics_chords
+    additionalProperties: true
+    properties:
+      metadata:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/sourceRecord"
+      lyrics_chords:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/sourceRecord"
+      arrangement:
+        type: array
+        items:
+          $ref: "#/$defs/sourceRecord"
+      warnings:
+        $ref: "#/$defs/stringList"
+
+  normalised_chordpro:
+    type: object
+    required:
+      - sections
+    additionalProperties: true
+    properties:
+      source_format:
+        type: string
+        enum:
+          - chordpro
+          - plain-text
+          - structured
+          - unknown
+      transposition:
+        type: object
+        additionalProperties: true
+        properties:
+          requested:
+            type: boolean
+          from_key:
+            $ref: "#/$defs/keyOrUnknown"
+          to_key:
+            $ref: "#/$defs/keyOrUnknown"
+          method:
+            type:
+              - string
+              - "null"
+          review_required:
+            type: boolean
+      sections:
+        type: object
+        minProperties: 1
+        additionalProperties:
+          $ref: "#/$defs/section"
+
+  arrangement:
+    type: object
+    required:
+      - sequence
+    additionalProperties: true
+    properties:
+      source:
+        type: string
+        enum:
+          - user-supplied
+          - source-derived
+          - generated
+          - revised
+          - unknown
+      sequence:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/arrangementEntry"
+      unresolved:
+        type: array
+        items:
+          type: string
+      notes:
+        $ref: "#/$defs/stringList"
+
+  render:
+    type: object
+    additionalProperties: true
+    properties:
+      mode:
+        type: string
+        enum:
+          - practice
+          - review
+      chord_layout:
+        type: string
+        enum:
+          - above_lyrics
+          - inline
+      show_full_song_map:
+        type: boolean
+      show_pagination:
+        type: boolean
+      overflow_strategy:
+        type: string
+        enum:
+          - split
+          - shrink
+          - manual-review
+      max_line_pairs_per_slide:
+        type: integer
+        minimum: 1
+      min_lyric_font_px:
+        type: integer
+        minimum: 1
+      min_chord_font_px:
+        type: integer
+        minimum: 1
+      continuation_labels:
+        type: boolean
+      theme:
+        type:
+          - string
+          - "null"
+
+  deck:
+    type: object
+    additionalProperties: true
+    properties:
+      output_formats:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/outputFormat"
+      style:
+        type:
+          - string
+          - "null"
+      slides:
+        type: object
+        additionalProperties: true
+        properties:
+          include_overview:
+            type: boolean
+          include_final_review:
+            type: boolean
+          density:
+            type: string
+            enum:
+              - compact
+              - standard
+              - spacious
+      renderer:
+        type: object
+        additionalProperties: true
+
+  validation:
+    type: object
+    additionalProperties: true
+    properties:
+      status:
+        type: string
+        enum:
+          - draft
+          - reviewed
+          - approved
+      warnings:
+        $ref: "#/$defs/stringList"
+      human_review_required:
+        $ref: "#/$defs/stringList"
+      fit_checks:
+        $ref: "#/$defs/stringList"
+      copyright_checks:
+        $ref: "#/$defs/stringList"
+      render_checks:
+        $ref: "#/$defs/stringList"
+
+  verification:
+    type: object
+    additionalProperties: true
+    properties:
+      lyrics:
+        $ref: "#/$defs/verificationState"
+      chords:
+        $ref: "#/$defs/verificationState"
+      ccli:
+        $ref: "#/$defs/verificationState"
+      checked_by:
+        type:
+          - string
+          - "null"
+      checked_date:
+        type:
+          - string
+          - "null"
+
+  practice_notes:
+    type: object
+    additionalProperties:
+      $ref: "#/$defs/stringList"
+
+$defs:
+  outputFormat:
+    type: string
+    enum:
+      - yaml
+      - marp
+      - html
+      - pdf
+
+  keyOrUnknown:
+    type:
+      - string
+      - "null"
+    pattern: "^(unknown|none|[A-G](b|#)?m?)?$"
+
+  pitchNotation:
+    type:
+      - string
+      - "null"
+    pattern: "^(unknown|none|[A-G](b|#)?[0-9])?$"
+
+  sourceRecord:
+    type: object
+    required:
+      - label
+    additionalProperties: true
+    properties:
+      label:
+        type: string
+        minLength: 1
+      provider:
+        type:
+          - string
+          - "null"
+      url:
+        type:
+          - string
+          - "null"
+      accessed_on:
+        type:
+          - string
+          - "null"
+      confidence:
+        type: string
+        enum:
+          - confirmed
+          - likely
+          - uncertain
+          - unknown
+      copyright_sensitive:
+        type: boolean
+      notes:
+        $ref: "#/$defs/stringList"
+
+  section:
+    type: object
+    required:
+      - type
+      - lines
+    additionalProperties: true
+    properties:
+      type:
+        type: string
+        enum:
+          - intro
+          - verse
+          - pre-chorus
+          - chorus
+          - bridge
+          - tag
+          - ending
+          - instrumental
+          - cue
+          - other
+      label:
+        type:
+          - string
+          - "null"
+      display_title:
+        type:
+          - string
+          - "null"
+      lyric_status:
+        type: string
+        enum:
+          - user-supplied
+          - licensed
+          - placeholder
+          - instrumental
+          - unknown
+      source_ref:
+        type:
+          - string
+          - "null"
+      notes:
+        $ref: "#/$defs/stringList"
+      lines:
+        type: array
+        items:
+          $ref: "#/$defs/line"
+      repeat:
+        type: integer
+        minimum: 1
+      bars:
+        type: array
+        items:
+          anyOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+
+  line:
+    anyOf:
+      - type: string
+      - type: object
+        required:
+          - chordpro
+        additionalProperties: true
+        properties:
+          chordpro:
+            type: string
+          text:
+            type:
+              - string
+              - "null"
+          chords:
+            type: array
+            items:
+              type: string
+          notes:
+            type:
+              - string
+              - "null"
+
+  arrangementEntry:
+    anyOf:
+      - type: string
+        minLength: 1
+      - type: object
+        required:
+          - section
+        additionalProperties: true
+        properties:
+          section:
+            type: string
+            minLength: 1
+          repeat:
+            type: integer
+            minimum: 1
+          label:
+            type:
+              - string
+              - "null"
+          cue:
+            type:
+              - string
+              - "null"
+          next:
+            type:
+              - string
+              - "null"
+          optional:
+            type: boolean
+
+  verificationState:
+    type: string
+    enum:
+      - verified
+      - unverified
+      - requires-review
+      - unknown
+
+  stringList:
+    anyOf:
+      - type: string
+      - type: array
+        items:
+          type: string
+      - type: "null"
