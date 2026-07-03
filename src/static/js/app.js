@@ -300,38 +300,50 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayPreview(data) {
         initializeComponents();
 
-        // Convert the search result format to YAML-like format for the new pipeline
-        const yamlSongData = convertSearchResultToYAML(data);
-        currentSongData = yamlSongData;
+        // /api/search returns a search-result shape (raw title/artist/key/
+        // content text) rather than the structured SongYAML that
+        // /api/preview expects. Ask the backend to parse the raw content
+        // into sections + arrangement via /api/generate_yaml, then hand the
+        // resulting YAML off to the preview pipeline.
+        fetch('/api/generate_yaml', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...data,
+                // /api/search surfaces the user-requested key under `key`
+                // (and the song's source key under `original_key`), but the
+                // /api/generate_yaml normalizer reads `target_key`. Forward
+                // the chosen key so the preview doesn't silently fall back
+                // to the converter's C default.
+                target_key: data.key || data.target_key || data.original_key || '',
+            }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to convert song data to structured YAML');
+            }
+            return response.json();
+        })
+        .then(result => {
+            const yamlSongData = (result && result.yaml) || {};
+            currentSongData = yamlSongData;
 
-        // Request preview generation from backend
-        generatePreview(yamlSongData);        // Show preview container
-        previewContainer.style.display = 'block';
-        if (arrangementEditorContainer) {
-            arrangementEditorContainer.style.display = 'block';
-        }
+            // Request preview generation from backend
+            generatePreview(yamlSongData);
 
-        // Scroll to preview
-        previewContainer.scrollIntoView({ behavior: 'smooth' });
-    }
+            // Show preview container
+            previewContainer.style.display = 'block';
+            if (arrangementEditorContainer) {
+                arrangementEditorContainer.style.display = 'block';
+            }
 
-    // Helper: convert search result to YAML-compatible format
-    function convertSearchResultToYAML(searchResult) {
-        // For now, create a minimal structure that works with the YAML pipeline
-        // This will be replaced by actual /api/generate_yaml endpoint call later
-        return {
-            title: searchResult.title || '',
-            authors: searchResult.artist ? [searchResult.artist] : [],
-            target_key: searchResult.key || '',
-            sections: searchResult.sections || {},
-            arrangement: searchResult.arrangement || [],
-            bpm: searchResult.bpm || null,
-            time_signature: searchResult.time_signature || '',
-            capo: searchResult.capo || '',
-            ccli_number: searchResult.ccli_number || null,
-            copyright: searchResult.copyright || '',
-            practice_notes: searchResult.practice_notes || {},
-        };
+            // Scroll to preview
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+            console.error('Song YAML conversion failed:', error);
+            showError('Failed to prepare song for preview: ' + error.message);
+        });
     }
 
     // Function to generate HTML preview via API
