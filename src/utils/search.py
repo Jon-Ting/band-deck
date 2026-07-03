@@ -9,7 +9,7 @@ def format_worship_together_url(song_name, artist):
     """
     Format a song name and artist into a Worship Together URL format.
 
-    Example: 'Goodness of God' by 'Bethel' becomes 'goodness-of-god-bethel'.
+    Example: 'Amazing Grace' by 'Traditional' becomes 'amazing-grace-traditional'.
     If artist is not specified, do not append the artist part.
 
     Note: This helper lived in ``pptx_generator.py`` historically because

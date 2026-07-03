@@ -8,9 +8,9 @@ class TestSearchFunctionality(unittest.TestCase):
         """Test the URL formatting function with various inputs"""
         test_cases = [
             {
-                'song': 'Goodness of God',
-                'artist': 'Bethel',
-                'expected': 'https://www.worshiptogether.com/songs/goodness-of-god-bethel/'
+                'song': 'Amazing Grace',
+                'artist': 'Traditional',
+                'expected': 'https://www.worshiptogether.com/songs/amazing-grace-traditional/'
             },
             {
                 'song': 'What A Beautiful Name',
@@ -35,7 +35,7 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_html = """
         <html>
             <body>
-                <h1>Goodness of God</h1>
+                <h1>Amazing Grace</h1>
                 <div class="chord-pro-line">
                     <div class="chord-pro-segment">
                         <div class="chord-pro-note">G</div>
@@ -59,12 +59,12 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_get.return_value = mock_response
         
         # Test the search function
-        result = search_song('Goodness of God', 'Bethel')
+        result = search_song('Amazing Grace', 'Traditional')
         
         # Verify the result
         self.assertIsNotNone(result)
-        self.assertEqual(result['title'], 'Goodness of God')
-        self.assertEqual(result['artist'], 'Bethel')
+        self.assertEqual(result['title'], 'Amazing Grace')
+        self.assertEqual(result['artist'], 'Traditional')
         self.assertIn('Verse 1', result['content'])
         self.assertIn('I love You Lord', result['content'])
 
@@ -87,7 +87,7 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_html = """
         <html>
             <body>
-                <h1>Goodness of God</h1>
+                <h1>Amazing Grace</h1>
                 <!-- Missing artist and lyrics -->
             </body>
         </html>
@@ -100,12 +100,12 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_get.return_value = mock_response
         
         # Test the search function
-        result = search_song('Goodness of God', 'Bethel')
+        result = search_song('Amazing Grace', 'Traditional')
         
         # The function returns the title even when other elements are missing
         self.assertIsNotNone(result)
-        self.assertEqual(result['title'], 'Goodness of God')
-        self.assertEqual(result['artist'], 'Bethel')
+        self.assertEqual(result['title'], 'Amazing Grace')
+        self.assertEqual(result['artist'], 'Traditional')
 
     @patch('requests.get')
     def test_lyrics_extraction(self, mock_get):
@@ -114,7 +114,7 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_html = """
         <html>
             <body>
-                <h1>Goodness of God</h1>
+                <h1>Amazing Grace</h1>
                 <div class="chord-pro-line">
                     <div class="chord-pro-segment">
                         <div class="chord-pro-note"></div>
@@ -156,12 +156,12 @@ class TestSearchFunctionality(unittest.TestCase):
         mock_get.return_value = mock_response
         
         # Test the search function
-        result = search_song('Goodness of God', 'Bethel')
+        result = search_song('Amazing Grace', 'Traditional')
         
         # Verify the result
         self.assertIsNotNone(result)
-        self.assertEqual(result['title'], 'Goodness of God')
-        self.assertEqual(result['artist'], 'Bethel')
+        self.assertEqual(result['title'], 'Amazing Grace')
+        self.assertEqual(result['artist'], 'Traditional')
         
         # Verify the content structure
         content = result['content']

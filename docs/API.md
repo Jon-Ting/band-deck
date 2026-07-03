@@ -14,28 +14,28 @@ Search for a song and return structured lyrics/chords + a preview payload.
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `song` | ✅ | Song name (e.g. `Goodness of God`) |
+| `song` | ✅ | Song name (e.g. `Amazing Grace`) |
 | `artist` | ❌ | Artist name (improves URL matching, e.g. `Bethel`) |
 | `key` | ❌ | Target key for transposition (e.g. `G`, `F#`, `Bb`) |
 
 **Example**
 ```bash
-curl "http://localhost:5000/api/search?song=Goodness%20of%20God&artist=Bethel&key=G"
+curl "http://localhost:5000/api/search?song=Amazing%20Grace&artist=Traditional&key=G"
 ```
 
 **Success Response** `200 OK`
 ```json
 {
-  "title": "Goodness of God",
-  "search_name": "Goodness of God",
-  "artist": "Bethel",
+  "title": "Amazing Grace",
+  "search_name": "Amazing Grace",
+  "artist": "Traditional",
   "content": "Verse 1\nG          Em\nI love You Lord\n...",
-  "source_url": "https://www.worshiptogether.com/songs/goodness-of-god-bethel/",
+  "source_url": "https://www.worshiptogether.com/songs/amazing-grace-traditional/",
   "original_key": "A",
   "key": "G",
   "pptx_preview": {
-    "title": "Goodness of God",
-    "artist": "Bethel",
+    "title": "Amazing Grace",
+    "artist": "Traditional",
     "key": "G",
     "sections": [
       { "header": "Verse 1", "content": "G          Em\nI love You Lord\n..." },
@@ -62,12 +62,12 @@ Generate a `.pptx` file for the given song and stream it as an attachment.
 
 **Example**
 ```bash
-curl -OJ "http://localhost:5000/api/download?song=Goodness%20of%20God&artist=Bethel&key=G"
+curl -OJ "http://localhost:5000/api/download?song=Amazing%20Grace&artist=Traditional&key=G"
 ```
 
 **Success Response** `200 OK` — binary PPTX file stream.
 
-`Content-Disposition: attachment; filename="Goodness of God - Lyrics and Chords.pptx"`
+`Content-Disposition: attachment; filename="Amazing Grace - Lyrics and Chords.pptx"`
 
 **Error Responses**
 
@@ -86,9 +86,9 @@ Save a song's data to the local slide library. Generates and stores a `.pptx` + 
 **Request Body** — JSON (same shape as the `search` response, without `pptx_preview`):
 ```json
 {
-  "title": "Goodness of God",
-  "search_name": "Goodness of God",
-  "artist": "Bethel",
+  "title": "Amazing Grace",
+  "search_name": "Amazing Grace",
+  "artist": "Traditional",
   "content": "...",
   "original_key": "A",
   "key": "G"
@@ -99,8 +99,8 @@ Save a song's data to the local slide library. Generates and stores a `.pptx` + 
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "title": "Goodness of God",
-  "artist": "Bethel",
+  "title": "Amazing Grace",
+  "artist": "Traditional",
   "key": "G",
   "filename": "550e8400-e29b-41d4-a716-446655440000.pptx"
 }
@@ -128,8 +128,8 @@ curl "http://localhost:5000/api/saved_slides"
 [
   {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "title": "Goodness of God",
-    "artist": "Bethel",
+    "title": "Amazing Grace",
+    "artist": "Traditional",
     "key": "G",
     "filename": "550e8400-e29b-41d4-a716-446655440000.pptx"
   }
