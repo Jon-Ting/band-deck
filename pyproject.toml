@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "band-deck"
 version = "0.1.0"
-description = "Musician-friendly PowerPoint slides with lyrics and chords, generated from public sources."
+description = "Musician-friendly HTML slide decks with lyrics and chords, generated from public sources."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Band-Deck Maintainers" }]
-keywords = ["music", "powerpoint", "lyrics", "chords", "slides", "performance"]
+keywords = ["music", "html", "marp", "lyrics", "chords", "slides", "performance"]
 classifiers = [
   "Framework :: Flask",
   "Programming Language :: Python :: 3",
@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
   "Flask>=3.0",
-  "python-pptx>=1.0",
   "requests>=2.30",
   "beautifulsoup4>=4.12",
   "pyyaml==6.0.1",
@@ -71,7 +70,6 @@ exclude = [
   "/**/__pycache__",
   "/*.py[cod]",
   "/**/*.py[cod]",
-  "/src/saved_slides/*.pptx",
   "/src/saved_slides/*.json",
   "/~$*",
 ]
