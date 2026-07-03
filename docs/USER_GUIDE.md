@@ -2,15 +2,18 @@
 
 ## Application Overview
 
-Band-Deck is a web application that allows you to quickly create musician-friendly slides displaying song lyrics with chord notations. The application currently scrapes a single public source (contemporary-worship songs on Worship Together), formats the content appropriately, and generates downloadable PowerPoint files optimized for musicians.
+Band-Deck is a web application that lets you quickly build musician-friendly slides with lyrics and chord notations. The application scrapes a single public source (contemporary-worship songs on Worship Together), turns the raw chart into a typed `SongYAML`, then renders it as a Marp markdown deck and an HTML slide preview. You edit the YAML live in the browser, save the slide as one or more formats (YAML, Marp markdown, HTML, optional PDF), redownload any saved format later, and combine saved slides into a single HTML deck for projection during services, concerts, rehearsals, or lessons.
 
 ## Features
 
 - **Simple Search Interface**: Enter a song name and optionally an artist to find your desired song
-- **Preview Functionality**: View how the lyrics and chords will appear before downloading
-- **PowerPoint Generation**: Download a professionally formatted PowerPoint file with lyrics and chords, ready to project during services, concerts, rehearsals, or lessons
-- **Optimized Layout**: All content is auto-distributed across 2–4 columns with font sizing that fits the slide
-- **Error Handling**: Clear feedback when songs cannot be found or other issues occur
+- **Live HTML Preview**: Render the Marp-backed HTML deck in an embedded iframe so chords, sections, and overflow look right before you commit
+- **YAML-Based Editing**: Tweak metadata, target key, BPM, time signature, section arrangement, and practice notes in the YAML editor pane; the preview auto-regenerates after a short debounce and `/api/validate` surfaces structural errors, slide-overflow warnings, and licensing notices inline
+- **Multi-format Save & Download**: Save slides as YAML source, Marp markdown, and rendered HTML; all three formats stay available for re-download after editing. PDF is part of the format contract and will be honoured by future renderer output, but the standard `save_slide` path currently does not emit a `.pdf` artefact.
+- **Slide Library**: List, re-download, update, or delete any saved slide from the **Saved Slides** panel without re-searching
+- **Batch Compilation**: Combine multiple saved slides into a single HTML deck with a clickable index page that the whole band can scroll through
+- **Cleanup**: One-click removal of orphan / scratch files under `data/saved_slides/` via the **Cleanup Temporary Files** action (handy when the renderer leaves stray outputs behind)
+- **Error Handling**: Clear feedback when a song cannot be found, the Marp CLI is missing, validation fails, or the slide-storage layer refuses an I/O operation
 
 ## How to Use
 
@@ -21,16 +24,29 @@ Band-Deck is a web application that allows you to quickly create musician-friend
    - Optionally enter the artist name for more accurate results
    - Click "Generate Slide"
 
-3. **Preview the Result**:
-   - Once found, the song will appear in the preview section
-   - Review the lyrics and chord formatting
+3. **Preview & Edit**:
+   - Once found, the song appears in the live HTML preview pane (orbit-style navigation: `→` / `Space` / `PageDown` for next, `←` / `PageUp` for previous)
+   - Switch the slide style between `practice` (chords above lyrics), `performance` (lyrics only), or `simple` from the style picker
+   - Edit metadata, target key, BPM, time signature, section arrangement, or practice notes directly in the YAML editor — the preview re-renders after a 500 ms debounce, and `/api/validate` flags any structural issues (overflow, missing fields, licensing markers) inline
 
-4. **Download the PowerPoint File**:
-   - Click the "Download PowerPoint" button
-   - Save the `.pptx` file to your computer
-   - Open it in PowerPoint, Keynote, or LibreOffice Impress to project or print
+4. **Save the Slide**:
+   - Click **Save Slide** to persist the current YAML/Marp/HTML artefacts to `data/saved_slides/`
+   - The save response carries the slide UUID and the `filenames` map so you can see exactly which formats landed on disk
 
-5. **Start a New Search**:
+5. **Download a Specific Format**:
+   - From the **Saved Slides** panel pick the slide and choose a format:
+     - `HTML` — the rendered Marp-backed deck (open in any modern browser, no network required)
+     - `Marp` — the underlying Marp markdown (re-render with the Marp CLI on another machine)
+     - `YAML` — the structured song definition (round-trippable through `/api/preview` and `/api/regenerate`)
+     - `PDF` — `pdf` is accepted by `/api/saved_slide/<id>/download/pdf` so the route stays stable, but the standard save path does not write a `.pdf` artefact today, so a download will return `404 Format pdf not available for this slide` until a PDF-emitting renderer is integrated
+   - Each download is a single file attachment served from `GET /api/saved_slide/<id>/download/<format>`
+
+6. **Batch Compile Multiple Songs**:
+   - Tick the slides you want in the **Saved Slides** panel
+   - Click **Compile Selected** — the app posts to `/api/compile` and returns a single `Compiled_Slide_Deck.html` with a clickable index page at the front and one anchor per slide
+   - Open the compiled deck in any browser and use it during a full set without switching tabs
+
+7. **Start a New Search**:
    - Type a new song name into the **Song Name** field and click **Generate Slide** to search for another song
 
 ## Data Sources
@@ -53,13 +69,14 @@ By using this application you acknowledge that:
 - This project ships with template/sample songs only — please verify each song's licensing status for your jurisdiction and use case.
 - The maintainers do not endorse redistribution of copyrighted lyrics or chord charts outside the bounds of fair use.
 
-## Printing Instructions
+## Printing & Projection
 
-The downloaded `.pptx` files can be opened in PowerPoint, Keynote, or LibreOffice Impress. From there, you can:
+The downloaded artefacts can be opened directly in any modern browser (HTML), re-rendered through the Marp CLI (Marp markdown), or re-imported into `/api/preview` (YAML). From there you can:
 
-1. Print directly to paper (use **landscape orientation** for best results)
-2. Export to PDF using your viewer of choice
-3. Project directly from the application during services, concerts, rehearsals, or lessons
+1. **Project from the browser**: open the downloaded `.html` deck — Marp's `<script>` disables arrow-key scrolling on the page so it cycles slides cleanly. Use `F` for fullscreen, `P` for presenter mode, and `→` / `Space` / `PageDown` / `←` / `PageUp` to navigate
+2. **Print to paper**: open the HTML in your browser and print to PDF (`Ctrl/Cmd-P` → "Save as PDF") or send directly to a printer — use **landscape** orientation and **Fit to page** for best results
+3. **Re-render on another machine**: take the `.marp.md` file and run `marp --html <file>.marp.md -o <file>.html` with any Marp CLI 3.x install
+4. **Project directly from the application** during services, concerts, rehearsals, or lessons — `http://localhost:5000` keeps the live preview in sync with your edits
 
 ## Troubleshooting
 
@@ -69,9 +86,10 @@ The downloaded `.pptx` files can be opened in PowerPoint, Keynote, or LibreOffic
 
 ## Technical Information
 
-- The application is built using Flask (Python) and modern web technologies
-- PowerPoint files are generated with adaptive layout and font sizing for projection on different displays
-- Rate limiting is currently disabled
+- The application is built using Flask (Python) on the backend and vanilla HTML / CSS / JavaScript on the frontend — no build step, no framework
+- The `SongYAML → Marp markdown → HTML` pipeline lives in `src/utils/marp_generator.py` and `src/utils/html_renderer.py`; the Marp CLI must be installed for HTML rendering (the app reports `status: degraded` on `/api/health` if it isn't, and falls back to a static HTML placeholder so the slide stays loadable)
+- Saved slides live under `data/saved_slides/` as `<uuid>.yaml` + `<uuid>.marp.md` + `<uuid>.html` + `<uuid>.json` artefacts (PDF where emitted); `clear_temp_files()` removes everything that isn't in that set
+- Rate limiting is currently **disabled** at the application layer (see the Development Notes in `README.md` for production deployment guidance and recommended external throttles)
 
 ---
 

@@ -76,7 +76,7 @@ All configuration is currently hardcoded in `src/main.py`. Key values to change 
 | `debug` | `app.run(debug=True)` | `True` | Set to `False` in production |
 | `host` | `app.run(host='0.0.0.0')` | `0.0.0.0` | Binds to all interfaces |
 | `port` | `app.run(port=5000)` | `5000` | |
-| `saved_slides/` path | `src/utils/slide_storage.py` | `src/saved_slides/` | Local disk; swap for remote storage in production |
+| `saved_slides/` path | `src/utils/slide_storage.py` | `data/saved_slides/` | Local disk; swap for remote storage in production |
 
 To disable debug mode:
 ```python
@@ -142,27 +142,34 @@ from flask_limiter.util import get_remote_address
 
 limiter = Limiter(get_remote_address, app=app, storage_uri="redis://localhost:6379")
 
-@api_bp.route('/search')
+@api_bp.route('/search', methods=['GET'])
 @limiter.limit("10 per minute")
 def search_song():
     ...
 ```
 
 ### Slide Storage at Scale
-The current file-based storage (`src/saved_slides/`) is not suitable for multi-user deployments. To support multiple users:
+The current file-based storage (`data/saved_slides/`) is not suitable for multi-user deployments. To support multiple users:
 
 1. Replace `src/utils/slide_storage.py` with a database-backed implementation (e.g. SQLite, PostgreSQL).
-2. Store `.pptx` files in object storage (e.g. AWS S3, Google Cloud Storage) keyed by UUID.
+2. Store the multi-format artefacts (`*.yaml`, `*.marp.md`, `*.html`, `*.json`, optional `*.pdf`) in object storage (e.g. AWS S3, Google Cloud Storage) keyed by UUID. PowerPoint export has been retired.
 3. Add session/user scoping so each user only sees their own slides.
 
 ---
 
 ## Docker (Optional)
 
-A minimal `Dockerfile` for containerised deployment:
+A minimal `Dockerfile` for containerised deployment. Note that `apt-get` packages are added before `uv sync` so that `/api/health` reports `marp_cli.available: true` from the first request:
 
 ```dockerfile
 FROM python:3.10-slim
+
+# Install Node.js and the Marp CLI (required by src/utils/html_renderer.py
+# and src/utils/marp_generator.py at request time).
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g @marp-team/marp-cli && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install uv
 RUN pip install uv
@@ -181,10 +188,10 @@ CMD ["uv", "run", "python", "src/main.py"]
 Build and run:
 ```bash
 docker build -t band-deck .
-docker run -p 5000:5000 -v $(pwd)/src/saved_slides:/app/src/saved_slides band-deck
+docker run -p 5000:5000 -v $(pwd)/data/saved_slides:/app/data/saved_slides band-deck
 ```
 
-Mount `src/saved_slides/` as a volume to persist saved slides across container restarts.
+Mount `data/saved_slides/` as a volume to persist saved slides across container restarts.
 
 ---
 
@@ -235,20 +242,19 @@ For production traffic, also consider:
 
 ## Storage Directory Permissions
 
-The slide library lives in `src/utils/slide_storage.py:_slides_directory_path()`.
-On a fresh host, ensure the directory is **writable by the runtime user**:
+The slide library directory is defined by the `SLIDES_DIR` constant in `src/utils/slide_storage.py`. On a fresh host, ensure the resolved directory is **writable by the runtime user**:
 
 ```bash
-mkdir -p src/saved_slides
-chmod 0750 src/saved_slides        # rwx for owner, rx for group
-chown -R band-deck:band-deck src/saved_slides
+mkdir -p data/saved_slides
+chmod 0750 data/saved_slides        # rwx for owner, rx for group
+chown -R band-deck:band-deck data/saved_slides
 ```
 
 When running in Docker, mount the directory as a writable volume:
 
 ```bash
 docker run -p 5000:5000 \
-  -v $(pwd)/src/saved_slides:/app/src/saved_slides \
+  -v $(pwd)/data/saved_slides:/app/data/saved_slides \
   band-deck:latest
 ```
 
@@ -263,7 +269,7 @@ owns the directory.
 - [ ] `uv sync --no-dev` succeeds
 - [ ] Node.js >= 16.0.0 (`node --version`)
 - [ ] `@marp-team/marp-cli` installed globally (`marp --version`)
-- [ ] `src/saved_slides/` writable by the runtime user
+- [ ] `data/saved_slides/` writable by the runtime user
 - [ ] `/api/health` reports `status: ok` and `marp_cli.available: true`
 - [ ] Behind a reverse proxy (nginx/Caddy) with TLS
 - [ ] WSGI server with timeout >= `DEFAULT_RENDER_TIMEOUT_SECONDS + 30`

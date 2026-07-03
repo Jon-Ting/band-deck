@@ -10,13 +10,20 @@ Browser (Vanilla JS)
        ▼
 Flask App
        │
-       ├── routes/api.py        ← HTTP boundary; thin handlers only
+       ├── routes/api.py               ← HTTP boundary; thin handlers only
        │
-       ├── utils/search.py      ← Scraping + chord transposition
-       ├── utils/pptx_generator.py  ← Slide generation
-       └── utils/slide_storage.py   ← File-based persistence
+       ├── utils/search.py             ← Scraping + chord transposition
+       ├── utils/yaml_converter.py     ← Raw chart data → typed SongYAML
+       ├── utils/yaml_api.py           ← /generate_yaml response builder
+       ├── utils/marp_generator.py     ← SongYAML → Marp markdown
+       ├── utils/html_renderer.py      ← Marp markdown → HTML via Marp CLI
+       ├── utils/preview.py            ← /preview & /regenerate orchestration
+       ├── utils/song_validator.py     ← Validation + overflow estimation
+       ├── utils/arrangement_engine.py ← Section arrangement proposal/validation
+       ├── utils/compiler.py           ← Multi-slide HTML deck assembly
+       └── utils/slide_storage.py      ← File-based persistence
                  │
-                 └── src/saved_slides/   ← .pptx + .json pairs on disk
+                 └── data/saved_slides/   ← .yaml / .marp.md / .html / .json artefacts
 ```
 
 ---
@@ -34,18 +41,30 @@ Flask App
 - Transposes chords: reads the original key from `<meta property="cludo:originalKey">`, calculates semitone shift, and rewrites each chord symbol.
 - Returns a plain dict; knows nothing about PowerPoint or HTTP.
 
-### `src/utils/pptx_generator.py`
-- `PowerPointGenerator.create_slide(song_data)` — builds a 10×5.625 inch slide.
-  - Determines column count (2–4) and font size (4–10pt) adaptively based on total line count.
-  - Distributes sections as contiguous blocks across columns left-to-right.
-  - Uses Consolas (monospace) font so chord alignment above lyrics is preserved.
-- `LyricsFormatter.parse_lyrics_and_chords()` — secondary parser for raw text content.
-- `format_worship_together_url()` — URL slug builder (also used by `search.py`).
+### `src/utils/yaml_converter.py`
+- Converts the raw scraped output from `search.py` (plain-text sections with chord/lyric lines) into a typed `SongYAML` dataclass tree (`src/utils/yaml_models.py`).
+- Infers section types (`verse`, `chorus`, `bridge`, `intro`, …) from section names via `infer_section_type()`.
+
+### `src/utils/marp_generator.py`
+- `generate_marp(song, style, options)` — emits a Marp markdown deck for either the `practice` (chord-over-lyric) or `performance` (lyric only) preset.
+- Anchors chord columns above the syllable they apply to so the chord stays aligned with its lyric in the rendered HTML.
+- Emits an embedded `<style>` block with the band's typography preferences (see `_css_template` for the exact rule set).
+
+### `src/utils/html_renderer.py`
+- `render_html(marp_markdown, output_path, timeout)` — shells out to the `marp` CLI to convert Marp markdown into a self-contained HTML file.
+- `verify_marp_cli()` — used by `/api/health` to report whether the CLI is on the `PATH`; the API returns `status: degraded` if it is missing.
+- Enforces an upper bound (`MAX_MARKDOWN_BYTES`) and a per-call timeout (`DEFAULT_RENDER_TIMEOUT_SECONDS`) so a malicious or pathological input cannot run unbounded.
+
+### `src/utils/preview.py`
+- `generate_preview(payload)` / `generate_regeneration(payload)` — orchestrate the `SongYAML → Marp → HTML` pipeline for the `/api/preview` and `/api/regenerate` endpoints.
+
+### `src/utils/compiler.py`
+- `compile_slides_html(slide_ids)` — merges saved slides into a single HTML deck with a clickable index page. The output is an HTML file (not a binary presentation): slides load via anchors pointing at the per-deck `<section id="…">` blocks.
 
 ### `src/utils/slide_storage.py`
-- Each saved slide is a **UUID-named pair**: `<uuid>.pptx` + `<uuid>.json`.
-- The JSON sidecar stores `{id, title, artist, key, filename}` — it is the source of truth for listing and metadata.
-- `compile_slides_with_index()` — merges all individual `.pptx` files into one presentation with a clickable index slide. Clickable areas are transparent rectangles with `click_action.target_slide` set.
+- Each saved slide is a **UUID-named artefact set**: `<uuid>.yaml`, `<uuid>.marp.md`, `<uuid>.html`, plus the `<uuid>.json` metadata sidecar (optional `<uuid>.pdf` if the renderer can produce one).
+- The JSON sidecar stores `{id, title, artist, key, filenames, created_at, updated_at, …}` — it is the source of truth for listing, downloading, and updating.
+- Each storage function (`save_slide`, `list_slides`, `get_slide`, `delete_slide`, `update_slide`, `get_slide_file`, `clear_temp_files`) reads/writes under `SLIDES_DIR` (defined as `<project_root>/data/saved_slides/`).
 
 ---
 
@@ -93,18 +112,12 @@ All my life You have been faithful
 
 ---
 
-## Adaptive Slide Layout Algorithm
+## Slide Overflow Estimation
 
-```
-for num_cols in [2, 3, 4]:
-    for font_size in [10, 9, ..., 4]:
-        if total_lines ≤ num_cols × (available_height / line_height):
-            use this combination
-            break
-```
+Overflow warnings come from `src/utils/song_validator.py:estimate_slide_overflow(song, style)` rather than from a Python-side PowerPoint layout picker. The estimator counts chord + lyric lines per section in the chosen style (`practice`, `performance`, `simple`) and flags any section whose line count exceeds the configured per-slide cap.
 
-- Sections are distributed as contiguous blocks (not interleaved) to preserve narrative flow.
-- A 1.25× line-height multiplier compensates for PowerPoint's internal spacing.
+- Each section is treated as a contiguous block (not interleaved) so narrative flow is preserved across slides.
+- The estimator surfaces a `suggestion` string per overflow (e.g. split verse, reduce repeats, switch style) that the editor UI displays next to the offending section.
 
 ---
 
@@ -118,23 +131,25 @@ for num_cols in [2, 3, 4]:
 ## File Storage Layout
 
 ```
-src/saved_slides/
-├── <uuid>.pptx       ← Individual song slide
+data/saved_slides/
+├── <uuid>.yaml       ← Structured SongYAML source
+├── <uuid>.marp.md    ← Marp markdown deck
+├── <uuid>.html       ← Rendered HTML deck (Marp CLI output)
 ├── <uuid>.json       ← Metadata sidecar
 ├── ...
-└── all_songs.pptx    ← Compiled deck (overwritten on each compile)
+└── (compiled.html    ← Compiled deck filename emitted by /api/compile)
 ```
 
-`clear_temp_files()` deletes everything that is **not** `.pptx` or `.json`.
+`clear_temp_files()` deletes everything in `data/saved_slides/` whose extension is not in `{.yaml, .marp.md, .html, .json}` (PDF artefacts are also kept if present).
 
 ---
 
 ## Frontend (Vanilla JS)
 
-- Single-page app in `src/static/index.html` + `src/static/js/app.js`.
+- Single-page app in `src/static/index.html` + `src/static/js/{app,slide_preview,song_editor,arrangement_editor}.js`.
 - No framework, no build step.
 - Communicates with the Flask API via `fetch()`.
-- Preview is rendered by parsing the `pptx_preview.sections` JSON returned by `/api/search`.
+- Live preview is rendered by loading the `html_content` field returned by `POST /api/preview` (and `/api/regenerate` after edits) into an `<iframe srcdoc="…">` in the editor pane.
 
 ---
 

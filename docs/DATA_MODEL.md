@@ -2,13 +2,13 @@
 
 ## Overview
 
-Band-Deck has no database. All state is stored as files on disk in `src/saved_slides/`. The core data structure is the **Song Data dict**, which flows through the entire pipeline.
+Band-Deck has no database. All state is stored as files on disk in `data/saved_slides/`. The core data structure is the **Song Data dict**, which flows through the entire pipeline.
 
 ---
 
 ## Song Data Dict
 
-This is the central in-memory data structure passed between `search.py`, `pptx_generator.py`, `slide_storage.py`, and the API layer.
+This is the central in-memory data structure passed between `search.py`, `yaml_converter.py`, `marp_generator.py`, `html_renderer.py`, `slide_storage.py`, and the API layer.
 
 ```python
 {
@@ -22,19 +22,10 @@ This is the central in-memory data structure passed between `search.py`, `pptx_g
 
     # Added by the API layer (api.py)
     "key":          str | None,   # User-requested target key (post-transposition)
-
-    # Added by api.py /search only (not stored)
-    "pptx_preview": {
-        "title":    str,
-        "artist":   str,
-        "key":      str,
-        "sections": [
-            {"header": str, "content": str},
-            ...
-        ]
-    }
 }
 ```
+
+> The legacy `pptx_preview` field has been retired. The live editor now drives its preview pane from the rendered HTML returned by `POST /api/preview` (which embeds the same section/line structure internally).
 
 > **Note**: `search_name` is preferred over `title` for display purposes (slide title, filename) because it reflects what the user typed, not what the scraper found. This allows searching "10000 Reasons" and getting a slide titled "10000 Reasons" even if the scraped title is "10,000 Reasons (Bless the Lord)".
 
@@ -67,44 +58,52 @@ G    D         Em        C
 All my life    You have been faithful
 ```
 
-Chords are space-padded so they align directly above the syllable they apply to. This alignment is significant — `pptx_generator.py` uses a monospace font (Consolas) to preserve it.
+Chords are space-padded so they align directly above the syllable they apply to. This alignment is significant — `src/utils/marp_generator.py` keeps the padded spacing verbatim in the Marp markdown, and the embedded `<style>` block uses a monospace typeface for chord/lyric lines so CSS layout preserves the alignment in the rendered HTML.
 
 ---
 
 ## Slide Metadata JSON (`.json` sidecar)
 
-Each saved slide has a UUID-named JSON sidecar in `src/saved_slides/`.
+Each saved slide has a UUID-named JSON sidecar in `data/saved_slides/`.
 
 ```python
 {
-    "id":       str,   # UUID (also the filename stem)
-    "title":    str,   # From search_name or title
-    "artist":   str,
-    "key":      str | None,
-    "filename": str    # e.g. "550e8400-e29b-41d4-a716-446655440000.pptx"
+    "id":           str,                       # UUID (also the filename stem)
+    "title":        str,                       # From search_name or title
+    "artist":       str | None,
+    "key":          str | None,
+    "filenames":    {"yaml": "...yaml",
+                     "marp": "...marp.md",
+                     "html": "...html",
+                     "pdf":  "...pdf"},        # Optional
+    "created_at":   str,                       # ISO 8601 UTC
+    "updated_at":   str,                       # ISO 8601 UTC
+    "bpm":          int | None,                # Optional
+    "time_signature": str | None,              # Optional
+    "ccli_number":  str | None,                # Optional
 }
 ```
 
-This file is the source of truth for listing and downloading. The `.pptx` file is treated as a binary blob keyed by `id`.
+This file is the source of truth for listing, downloading, and updating. The artefacts listed in `filenames` are the actual on-disk files keyed by `id`.
 
 ---
 
 ## File Storage Layout
 
 ```
-src/saved_slides/
-├── <uuid>.pptx       ← Individual song slide (binary)
-├── <uuid>.json       ← Metadata sidecar (text)
-├── <uuid>.pptx
-├── <uuid>.json
-│   ...
-└── all_songs.pptx    ← Compiled deck (regenerated on each compile call)
+data/saved_slides/
+├── <uuid>.yaml       ← SongYAML source (typed dataclass tree, serialised via yaml.safe_dump)
+├── <uuid>.marp.md    ← Marp markdown deck
+├── <uuid>.html       ← Rendered HTML deck (from Marp CLI output)
+├── <uuid>.json       ← Metadata sidecar
+├── ...
+└── (compiled.html    ← Compiled deck filename returned by /api/compile)
 ```
 
 **Invariants:**
-- Every `.json` file has a matching `.pptx` with the same stem.
-- `all_songs.pptx` is always overwritten — it is not tracked in any sidecar.
-- `clear_temp_files()` removes everything that is neither `.pptx` nor `.json`.
+- Every `<uuid>.json` sidecar has at least one matching artefact (typically `.yaml` / `.marp.md` / `.html`) with the same stem.
+- The compiled deck is a fresh output of `POST /api/compile`; it is not tracked in any sidecar.
+- `clear_temp_files()` removes everything in `data/saved_slides/` whose extension is not in `{.yaml, .marp.md, .html, .json}` (PDF artefacts are also kept if present).
 
 ---
 

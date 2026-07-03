@@ -25,7 +25,7 @@ A Python Flask web application that creates musician-friendly slides with lyrics
 - 💾 **Slide library** — Save slides as YAML, Marp, HTML, or PDF; re-download or delete any time
 - 📦 **Batch compilation** — Combine saved slides into a single HTML deck with a clickable index
 - 🧹 **Cleanup** — One-click removal of temporary files
-- ⚖️ **Rate-limited** — Public `/api/` endpoints are rate-limited per client (~10 req/min)
+- ⚖️ **Unrestricted (for now)** — `/api/` endpoints have no per-client throttling; add `Flask-Limiter` or a reverse-proxy limiter before any public deployment
 
 ### Keyboard shortcuts (live preview)
 
@@ -147,7 +147,7 @@ uv run ruff check .
 
 ## 🔌 API Reference
 
-All endpoints live under `/api/`. The public-facing endpoints are rate-limited (~10 requests/minute per client).
+All endpoints live under `/api/`. **No rate limiting is enforced** at the application layer; see Development Notes for production guidance.
 
 | Method | Endpoint                              | Description                                                      |
 | :----- | :------------------------------------ | :--------------------------------------------------------------- |

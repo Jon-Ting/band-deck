@@ -207,7 +207,7 @@ curl -OJ "http://localhost:5000/api/compile_slides"
 
 ### `POST /api/clear_temp_files`
 
-Delete all non-`.pptx` / non-`.json` files from `src/saved_slides/`. This is safe to run at any time; it will never delete saved slides or compiled decks.
+Delete all non-`.pptx` / non-`.json` files from `data/saved_slides/`. This is safe to run at any time; it will never delete saved slides or compiled decks.
 
 **Example**
 ```bash
