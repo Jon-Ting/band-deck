@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/band-deck/song.schema.json",
+  "title": "Song YAML Schema",
+  "description": "JSON schema for band-deck song data in YAML/JSON format with ChordPro-formatted lyrics.",
+  "type": "object",
+  "required": [
+    "title",
+    "authors",
+    "target_key",
+    "sections",
+    "arrangement"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Song title"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "List of song authors/composers"
+    },
+    "ccli_number": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "CCLI number, if available"
+    },
+    "copyright": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Copyright notice for the song"
+    },
+    "original_key": {
+      "$ref": "#/$defs/musicalKey",
+      "description": "The original key the song was written in"
+    },
+    "target_key": {
+      "$ref": "#/$defs/musicalKey",
+      "description": "The key to transpose the song to"
+    },
+    "bpm": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 20,
+      "maximum": 300,
+      "description": "Beats per minute"
+    },
+    "time_signature": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]+/[0-9]+$",
+      "description": "Time signature (e.g., '4/4', '6/8')"
+    },
+    "capo": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Capo position, if applicable"
+    },
+    "sections": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Dictionary of song sections keyed by section name",
+      "additionalProperties": {
+        "$ref": "#/$defs/songSection"
+      }
+    },
+    "arrangement": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Ordered list of section names defining the song structure"
+    },
+    "practice_notes": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Section-specific practice notes",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "URLs where this song data was sourced from"
+    }
+  },
+  "$defs": {
+    "musicalKey": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^([A-G](b|#)?|unknown|none)?$",
+      "description": "Musical key (C, C#, Db, D, etc., unknown, none, or null)"
+    },
+    "songSection": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "lines"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Section name"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "verse",
+            "chorus",
+            "bridge",
+            "instrumental",
+            "intro",
+            "outro",
+            "interlude"
+          ],
+          "description": "Type of section"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/chordProLine"
+          },
+          "description": "List of lines in this section"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of times to repeat"
+        },
+        "notes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional notes for this section"
+        }
+      }
+    },
+    "chordProLine": {
+      "type": "object",
+      "required": [
+        "text",
+        "chords"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Lyric text without chord symbols"
+        },
+        "chords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/chordPosition"
+          },
+          "description": "List of positioned chords"
+        }
+      }
+    },
+    "chordPosition": {
+      "type": "object",
+      "required": [
+        "chord",
+        "position"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "chord": {
+          "$ref": "#/$defs/chordSymbol",
+          "description": "The chord symbol"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Character position in the lyric text"
+        }
+      }
+    },
+    "chordSymbol": {
+      "type": "string",
+      "pattern": "^[A-G](b|#)?(m|maj|min|dim|aug|sus|add)?[0-9]*(sus[24])?(add[0-9]+)?(maj[0-9]+)?(/[A-G](b|#)?)?$",
+      "description": "Chord symbol (e.g., 'C', 'Bm', 'D/F#', 'Gsus4')"
+    }
+  }
+}
