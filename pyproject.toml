@@ -25,6 +25,8 @@ dependencies = [
   "python-pptx>=1.0",
   "requests>=2.30",
   "beautifulsoup4>=4.12",
+  "pyyaml==6.0.1",
+  "jsonschema==4.21.1",
 ]
 
 [project.urls]
@@ -41,6 +43,7 @@ dev = [
   "pytest>=7",
   "pytest-cov>=4",
   "ruff>=0.4",
+  "hypothesis>=6.88.0",
 ]
 
 # -----------------------------------------------------------------------------
