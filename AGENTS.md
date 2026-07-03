@@ -45,4 +45,4 @@ Search → chordpro_parser → SongYAML → marp_generator → html_renderer →
 - Song title: prefer `search_name` (user input) over `title` (scraped).
 - Business logic in `src/utils/` only; route handlers are thin wrappers.
 - Save formats: `{yaml, marp, html}` always; `pdf` optional. `pptx` is retired.
-- `src/saved_slides/` is runtime data — never commit its contents.
+- `data/saved_slides/` is runtime data — never commit its contents.

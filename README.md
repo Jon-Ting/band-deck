@@ -58,7 +58,7 @@ A Python Flask web application that creates musician-friendly slides with lyrics
 - **Node.js 16+** for the Marp CLI (used by the HTML rendering pipeline)
 - A modern web browser
 
-> The repository ships with sample song files in `src/saved_slides/` — these are templates you can use or replace. The `.python-version` file pins Python 3.10 so `uv` picks the right interpreter automatically.
+> The repository ships with sample song files in `data/saved_slides/` — these are templates you can use or replace. The `.python-version` file pins Python 3.10 so `uv` picks the right interpreter automatically.
 
 ---
 
@@ -163,7 +163,7 @@ All endpoints live under `/api/`. The public-facing endpoints are rate-limited (
 | DELETE | `/api/saved_slide/<id>`               | Delete a saved slide                                             |
 | GET    | `/api/saved_slide/<id>/download/<fmt>`| Download an already-saved slide in the requested format         |
 | POST   | `/api/compile`                        | Combine multiple saved slides into a single HTML deck           |
-| POST   | `/api/clear_temp_files`               | Remove non-format temporary files in `src/saved_slides/`         |
+| POST   | `/api/clear_temp_files`               | Remove non-format temporary files in `data/saved_slides/`         |
 
 ### Example: Search for a song
 

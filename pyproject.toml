@@ -70,7 +70,10 @@ exclude = [
   "/**/__pycache__",
   "/*.py[cod]",
   "/**/*.py[cod]",
-  "/src/saved_slides/*.json",
+  "/data/saved_slides/*.yaml",
+  "/data/saved_slides/*.marp.md",
+  "/data/saved_slides/*.html",
+  "/data/saved_slides/*.json",
   "/~$*",
 ]
 

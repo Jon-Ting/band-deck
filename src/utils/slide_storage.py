@@ -3,13 +3,12 @@ import json
 import uuid
 import yaml
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional
 import logging
 
-SLIDES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saved_slides")
-
-if not os.path.exists(SLIDES_DIR):
-    os.makedirs(SLIDES_DIR)
+SLIDES_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "saved_slides"
+SLIDES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _slide_path(slide_id: str, format: str = "html") -> str:
