@@ -18,10 +18,23 @@ A Python Flask web application that creates musician-friendly PowerPoint slides 
 - 🎼 **Automatic chord transposition** — Request any key; chords are rewritten on the fly
 - 📊 **Adaptive slide layout** — Content is auto-distributed across 2–4 columns with font size that fits the slide
 - 👁️ **Live preview** — See how the slide will look before downloading
-- 💾 **Slide library** — Save generated slides locally; re-download or delete any time
-- 📦 **Compile all slides** — Bundle every saved song into a single `.pptx` with a clickable index page
+- 🌐 **HTML/Marp workflow** — Generates standalone Marp-driven HTML decks; preview in-browser, edit live, regenerate on blur
+- 🎬 **Multiple slide styles** — Choose `practice`, `performance`, or `simple` style for each song
+- 📝 **YAML editor** — Modify metadata, chords, lyrics, arrangement, and practice notes; the preview auto-updates after a 500 ms debounce
+- 🔔 **Validation warnings** — Live errors, slide overflow, and CCLI/licensing reminders surface in the editor
+- 💾 **Slide library** — Save slides as YAML, Marp, HTML, PDF, or PPTX; re-download or delete any time
+- 📦 **Batch compilation** — Combine saved slides into a single HTML deck with a clickable index, or into a legacy `.pptx`
 - 🧹 **Cleanup** — One-click removal of temporary files
 - ⚖️ **Rate-limited** — Public `/api/` endpoints are rate-limited per client (~10 req/min)
+
+### Keyboard shortcuts (live preview)
+
+| Key | Action |
+| :-- | :----- |
+| `→`, `Space`, `PageDown` | Next slide |
+| `←`, `PageUp` | Previous slide |
+| `F` | Toggle fullscreen |
+| `P` | Toggle presenter mode (high-contrast sidebar, larger queue) |
 
 ---
 

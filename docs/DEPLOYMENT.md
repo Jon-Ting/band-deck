@@ -14,6 +14,59 @@ The server starts at **http://localhost:5000** in debug mode (auto-reload on fil
 
 ---
 
+## Requirements: Node.js & Marp CLI
+
+The HTML/Marp pipeline (preview, save, regenerate, compile) shells out to
+the [`marp` CLI](https://github.com/marp-team/marp-cli). The CLI is a
+Node.js application, so Node.js must be available on the host.
+
+| Component | Minimum version | Notes |
+| :-------- | :------------- | :---- |
+| Node.js   | 16.0.0         | Required by Marp CLI 3.x. Use `nvm install 16` if your distro ships older Node. |
+| Marp CLI  | 3.0.0          | Installed via `npm install -g @marp-team/marp-cli` |
+
+### Install on Linux / macOS
+
+```bash
+# 1. Install Node.js (skip if your distro ships >=16 already)
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 2. Install Marp CLI globally
+npm install -g @marp-team/marp-cli
+
+# 3. Verify
+marp --version
+# > @marp-team/marp-cli v3.x.x
+```
+
+### Install on Windows (PowerShell)
+
+```powershell
+choco install nodejs-lts
+npm install -g @marp-team/marp-cli
+marp --version
+```
+
+### Verifying from the API
+
+Once the server is running, hit the health endpoint to confirm the CLI is
+discoverable from the Python process:
+
+```bash
+curl http://localhost:5000/api/health
+# {
+#   "status": "ok",
+#   "marp_cli": {"available": true, "note": "Marp CLI is available."},
+#   "storage": {"path": "...", "files": N, "bytes": N}
+# }
+```
+
+`status` is `ok` only when Marp is installed; otherwise it's `degraded`
+and the `note` explains what is missing.
+
+---
+
 ## Configuration
 
 All configuration is currently hardcoded in `src/main.py`. Key values to change for deployment:
@@ -147,4 +200,84 @@ curl -I http://localhost:5000/
 # API smoke test
 curl "http://localhost:5000/api/saved_slides"
 # Expected: []  (or a list if slides are already saved)
+
+# Operational probe
+curl "http://localhost:5000/api/health"
+# Reports Marp CLI availability and recorded storage bytes.
+```
+
+---
+
+## Subprocess Timeouts & Resource Limits
+
+`src/utils/html_renderer.py` shells out to the `marp` CLI. The defaults
+are tuned for typical worship songs but **must** be reviewed before
+production:
+
+| Setting                  | Default | Where to change                                  |
+| :----------------------- | :------ | :----------------------------------------------- |
+| `DEFAULT_RENDER_TIMEOUT_SECONDS` | 30s  | `src/utils/html_renderer.py`              |
+| `DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS` | 5s | `src/utils/html_renderer.py`             |
+| `MAX_MARKDOWN_BYTES`     | 2 MiB   | `src/utils/html_renderer.py`                    |
+
+Increase the render timeout only if you ship particularly large song
+maps; the subprocess should never run unbounded, so do not raise above
+~120 seconds.
+
+For production traffic, also consider:
+- Wrapping the Flask app with `gunicorn` (or another WSGI server)
+  and configuring `--timeout 120` so a stuck Marp subprocess doesn't
+  pin a worker for longer than the render timeout.
+- Setting a higher process limit (e.g. `ulimit -n 4096`) if you run
+  many concurrent renders; each `marp` subprocess is short-lived but
+  can momentarily spike the open-file count.
+
+---
+
+## Storage Directory Permissions
+
+The slide library lives in `src/utils/slide_storage.py:_slides_directory_path()`.
+On a fresh host, ensure the directory is **writable by the runtime user**:
+
+```bash
+mkdir -p src/saved_slides
+chmod 0750 src/saved_slides        # rwx for owner, rx for group
+chown -R band-deck:band-deck src/saved_slides
+```
+
+When running in Docker, mount the directory as a writable volume:
+
+```bash
+docker run -p 5000:5000 \
+  -v $(pwd)/src/saved_slides:/app/src/saved_slides \
+  band-deck:latest
+```
+
+In nginx+Gunicorn productions, point `user app;` to the same UID that
+owns the directory.
+
+---
+
+## Production Deployment Checklist
+
+- [ ] Python 3.10+ installed (via `uv python install 3.10`)
+- [ ] `uv sync --no-dev` succeeds
+- [ ] Node.js >= 16.0.0 (`node --version`)
+- [ ] `@marp-team/marp-cli` installed globally (`marp --version`)
+- [ ] `src/saved_slides/` writable by the runtime user
+- [ ] `/api/health` reports `status: ok` and `marp_cli.available: true`
+- [ ] Behind a reverse proxy (nginx/Caddy) with TLS
+- [ ] WSGI server with timeout >= `DEFAULT_RENDER_TIMEOUT_SECONDS + 30`
+- [ ] Logging routed somewhere durable (stderr is fine; `LOG_FILE` env var still optional)
+- [ ] The end-to-end smoke test below passes
+
+### Smoke test
+
+```bash
+# Render one slide end-to-end (uses Marp CLI)
+curl -sS -X POST http://localhost:5000/api/preview \
+  -H 'Content-Type: application/json' \
+  -d '{"song": {"title":"Smoke Test","authors":["Test"],"target_key":"C","sections":{"V1":{"name":"V1","type":"verse","lines":[{"text":"Hello world","chords":[]}]}},"arrangement":["V1"]}}' \
+  | jq '.html_content | length'
+# Expected: > 1000 (real HTML output)
 ```
