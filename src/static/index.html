@@ -45,19 +45,73 @@
 
         <div class="preview-container" id="preview-container">
             <h2>Preview</h2>
+            
+            <!-- Download Format Selector -->
+            <div class="download-format-selector">
+                <label for="download-format">Download Format:</label>
+                <select id="download-format" name="download-format">
+                    <option value="html" selected>HTML Slide Deck (Recommended)</option>
+                    <option value="marp">Marp Markdown</option>
+                    <option value="yaml">YAML Source</option>
+                    <option value="pdf">PDF (requires Marp CLI)</option>
+                    <option value="pptx">PowerPoint (Legacy)</option>
+                </select>
+            </div>
+
             <div class="button-container">
-                <button id="download-button">Download PowerPoint</button>
+                <button id="download-button">Download HTML Slide Deck</button>
                 <button id="save-slide-button">Save Slide</button>
             </div>
-            <div class="slide-preview">
-                <h3>PowerPoint Preview</h3>
-                <div class="slide-frame">
-                    <div class="slide-title" id="slide-title">Song Title</div>
-                    <div class="slide-content slide-content-preview" id="slide-content">
-                        <!-- Slide content will be inserted here -->
-                    </div>
-                    <div class="slide-disclaimer">For personal and educational use only. Please respect copyright laws.</div>
-                </div>
+
+            <!-- Validation Warnings Display (errors that block save) -->
+            <div id="validation-errors" class="validation-errors validation-blocker" hidden>
+                <h4>⚠️ Validation Errors (must be fixed before saving)</h4>
+                <p class="validation-help">These issues prevent saving the slide:</p>
+                <ul id="validation-errors-list"></ul>
+            </div>
+
+            <!-- Validation Warnings Display (dismissible informational alerts) -->
+            <div id="validation-warnings" class="validation-warnings" hidden>
+                <h4>⚠ Validation Warnings</h4>
+                <p class="validation-help">These are advisories to review before using the slide.</p>
+                <ul id="validation-warnings-list"></ul>
+                <button id="dismiss-warnings" type="button" class="validation-dismiss">Dismiss</button>
+            </div>
+
+            <!-- Overflow Warnings -->
+            <div id="overflow-warnings" class="validation-warnings" hidden>
+                <h4>📏 Overflow Warnings</h4>
+                <p class="validation-help">Sections that may not fit on a single slide:</p>
+                <ul id="overflow-warnings-list"></ul>
+                <button id="dismiss-overflow" type="button" class="validation-dismiss">Dismiss</button>
+            </div>
+
+            <!-- Licensing Reminders -->
+            <div id="licensing-reminders" class="validation-warnings" hidden>
+                <h4>📜 Licensing Reminders</h4>
+                <ul id="licensing-reminders-list"></ul>
+                <button id="dismiss-licensing" type="button" class="validation-dismiss">Dismiss</button>
+            </div>
+
+            <!-- HTML Slide Preview -->
+            <div id="html-slide-preview-container" class="html-preview-section">
+                <h3>Live Preview</h3>
+                <p class="preview-description">Navigate through your slides using the controls below or keyboard shortcuts (arrows, space, P for presenter mode, F for fullscreen).</p>
+                <div id="html-slide-preview"></div>
+            </div>
+
+            <!-- Song Editor -->
+            <div id="song-editor-container" class="song-editor-section">
+                <h3>Edit Song Details</h3>
+                <p class="editor-description">Make changes to any field. The preview will automatically regenerate after you stop typing.</p>
+                <div id="song-editor"></div>
+            </div>
+
+            <!-- Arrangement Editor -->
+            <div id="arrangement-editor-container" class="song-editor-section">
+                <h3>Edit Arrangement</h3>
+                <p class="editor-description">Drag rows to reorder, set repeat counts, and capture intro/interlude/ending notes.</p>
+                <div id="arrangement-editor"></div>
             </div>
         </div>
 
@@ -88,6 +142,7 @@
 
     <script src="/static/js/slide_preview.js"></script>
     <script src="/static/js/song_editor.js"></script>
+    <script src="/static/js/arrangement_editor.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

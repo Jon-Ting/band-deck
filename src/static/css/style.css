@@ -539,4 +539,296 @@
   #saved-slides-list {
     overflow-x: auto;
   }
-  
+
+  /* Download Format Selector */
+  .download-format-selector {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .download-format-selector label {
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .download-format-selector select {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font: inherit;
+  }
+
+  /* HTML Preview and Editor Sections */
+  .html-preview-section,
+  .song-editor-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  .html-preview-section h3,
+  .song-editor-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .preview-description,
+  .editor-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  /* Validation Warnings */
+  .validation-warnings {
+    margin-top: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--border-radius);
+  }
+
+  .validation-warnings h4 {
+    margin-bottom: 0.5rem;
+    color: #856404;
+  }
+
+  .validation-warnings ul {
+    margin-left: 1.5rem;
+    color: #856404;
+  }
+
+  .validation-warnings li {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Legacy PowerPoint Preview */
+  #legacy-pptx-preview {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f0f0f0;
+    border-radius: var(--border-radius);
+    border: 1px dashed #ccc;
+  }
+
+  #legacy-pptx-preview h3 {
+    color: #666;
+    font-style: italic;
+  }
+
+  /* Arrangement editor */
+  .arrangement-editor {
+    margin-top: 1rem;
+    padding: 1.25rem;
+    background: #fafbfc;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius);
+  }
+
+  .arrangement-editor__title {
+    color: var(--primary-color);
+    margin: 0 0 0.4rem;
+    font-size: 1.15rem;
+  }
+
+  .arrangement-editor__help {
+    color: #4b5563;
+    font-size: 0.85rem;
+    margin: 0 0 0.9rem;
+    line-height: 1.4;
+  }
+
+  .arrangement-editor__list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .arrangement-editor__list.is-dragging {
+    user-select: none;
+  }
+
+  .arrangement-editor__row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: var(--border-radius);
+    cursor: grab;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+
+  .arrangement-editor__row.is-drag-over {
+    background: #eef2ff;
+    border-color: var(--primary-color);
+  }
+
+  .arrangement-editor__row.dragging {
+    opacity: 0.6;
+  }
+
+  .arrangement-editor__handle {
+    color: #9ca3af;
+    font-weight: 700;
+    user-select: none;
+    cursor: grab;
+    font-size: 1.1rem;
+  }
+
+  .arrangement-editor__name {
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .arrangement-editor__repeat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.78rem;
+    color: #4b5563;
+  }
+
+  .arrangement-editor__repeat-input,
+  .arrangement-editor__repeat input[type="number"] {
+    width: 4.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+  }
+
+  .arrangement-editor__remove {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .arrangement-editor__remove:hover {
+    background: #fee2e2;
+  }
+
+  .arrangement-editor__remove[disabled] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .arrangement-editor__empty {
+    color: #6b7280;
+    font-style: italic;
+    margin: 0.4rem 0 0.8rem;
+  }
+
+  .arrangement-editor__notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .arrangement-editor__section-title {
+    grid-column: 1 / -1;
+    margin: 0.6rem 0 0.2rem;
+    font-size: 1rem;
+    color: var(--primary-color);
+  }
+
+  .arrangement-editor__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .arrangement-editor__field textarea {
+    min-height: 72px;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+    resize: vertical;
+  }
+
+  .arrangement-editor__field textarea[disabled] {
+    opacity: 0.6;
+  }
+
+  .arrangement-editor__adder {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .arrangement-editor__label {
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .arrangement-editor__adder select {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+  }
+
+  .arrangement-editor__add {
+    padding: 0.45rem 0.95rem;
+    border: 1px solid var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .arrangement-editor__add[disabled] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .arrangement-editor__status {
+    min-height: 1.4rem;
+    margin-top: 0.75rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+  }
+
+  .arrangement-editor__status.is-error {
+    color: var(--error-color);
+  }
+
+  .arrangement-editor__warnings {
+    margin-top: 0.75rem;
+    padding: 0.8rem 1rem;
+    background: #fff8e1;
+    color: #7a5600;
+    border-radius: var(--border-radius);
+  }
+
+  .arrangement-editor__warnings ul {
+    margin-left: 1.25rem;
+  }
+
