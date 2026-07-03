@@ -20,14 +20,99 @@ class MarpOptions:
     aspect_ratio: str = "16:9"
 
 
+# Default toggle sets per Requirements 16.1, 16.2, 16.3. Each style is a
+# composition of the three display toggles plus per-style layout hints
+# (font_size, sidebar ratio, song-map presence on title slide).
+#
+# The dict values are intentionally ``MappingProxyType``-style immutable at
+# the application layer: callers go through :func:`_resolved_preset` which
+# always returns a shallow ``dict`` copy so a caller mutating the result
+# cannot corrupt shared state across slides / render calls.
+STYLE_PRESETS: dict[str, dict[str, object]] = {
+    # Practice: song map + metadata + practice notes; richer sidebar.
+    "practice": {
+        "show_song_map": True,
+        "show_metadata": True,
+        "show_practice_notes": True,
+        "font_size": "24px",
+        "sidebar_ratio": "0.9fr",
+        "song_map_on_section_slides": True,
+        "show_general_cue_box": True,
+        "show_copyright": True,
+    },
+    # Performance: emphasize lyrics, minimize metadata.
+    "performance": {
+        "show_song_map": True,
+        "show_metadata": False,
+        "show_practice_notes": False,
+        "font_size": "28px",
+        "sidebar_ratio": "0.6fr",
+        "song_map_on_section_slides": False,
+        "show_general_cue_box": False,
+        "show_copyright": True,
+    },
+    # Simple: minimal formatting, no metadata bar, no song map.
+    "simple": {
+        "show_song_map": False,
+        "show_metadata": False,
+        "show_practice_notes": False,
+        "font_size": "30px",
+        "sidebar_ratio": "0fr",
+        "song_map_on_section_slides": False,
+        "show_general_cue_box": False,
+        "show_copyright": True,
+    },
+}
+
+
+def _resolve_options(style: str, options: MarpOptions | None) -> MarpOptions:
+    """Combine a style preset with any explicit MarpOptions overrides.
+
+    The style preset supplies a baseline configuration (per Requirements
+    16.1, 16.2, 16.3). Explicit ``options`` field values that differ
+    from the dataclass defaults (``MarpOptions()``) win so the
+    SongEditor can override per song/band. Passing options that happen to
+    match a default is treated the same as "no override": callers
+    wanting to be explicit should hit the field directly via
+    ``MarpOptions(show_metadata=False, ...)``.
+    """
+    preset = dict(_resolved_preset(style))  # copy — never mutate the global preset
+    base = MarpOptions(
+        show_song_map=bool(preset["show_song_map"]),
+        show_metadata=bool(preset["show_metadata"]),
+        show_practice_notes=bool(preset["show_practice_notes"]),
+        font_size=str(preset["font_size"]),
+    )
+    if options is None:
+        return base
+    baseline = MarpOptions()
+    for field in base.__dataclass_fields__:  # type: ignore[attr-defined]
+        if getattr(options, field) != getattr(baseline, field):
+            setattr(base, field, getattr(options, field))
+    return base
+
+
+def _resolved_preset(style: str) -> dict[str, object]:
+    """Return a fresh shallow copy of the style preset so callers can
+    safely read (and mutate if they need to) without corrupting the
+    module-global ``STYLE_PRESETS`` for other render calls.
+    """
+    return dict(STYLE_PRESETS.get(style, STYLE_PRESETS["practice"]))
+
+
 def generate_marp(
     song: SongYAML,
     style: str = "practice",
     options: MarpOptions | None = None,
 ) -> str:
-    """Generate Marp markdown from structured song data."""
-    resolved_options = options or MarpOptions()
-    slides = [_generate_title_slide(song, resolved_options)]
+    """Generate Marp markdown from structured song data.
+
+    Honors the slide ``style`` preset (Requirements 16.1-16.6) and any
+    explicit ``MarpOptions`` overrides supplied by the caller.
+    """
+    resolved_options = _resolve_options(style, options)
+    preset = _resolved_preset(style)
+    slides = [_generate_title_slide(song, resolved_options, preset)]
 
     for current_index, section_name in enumerate(song.arrangement):
         section = song.sections.get(section_name)
@@ -46,10 +131,11 @@ def generate_marp(
                 current_index=current_index,
                 next_section=next_section,
                 options=resolved_options,
+                preset=preset,
             )
         )
 
-    return _assemble_marp_document(slides, resolved_options)
+    return _assemble_marp_document(slides, resolved_options, style)
 
 
 def format_chordpro_line(line: ChordProLine) -> str:
@@ -57,7 +143,8 @@ def format_chordpro_line(line: ChordProLine) -> str:
     return pretty_print_chordpro(line, "html")
 
 
-def _assemble_marp_document(slides: list[str], options: MarpOptions) -> str:
+def _assemble_marp_document(slides: list[str], options: MarpOptions, style: str) -> str:
+    sidebar_ratio = str(_resolved_preset(style).get("sidebar_ratio", "0.9fr"))
     frontmatter = "\n".join(
         [
             "---",
@@ -67,31 +154,39 @@ def _assemble_marp_document(slides: list[str], options: MarpOptions) -> str:
             f"size: {options.aspect_ratio}",
             "---",
             "",
-            _css_template(options),
+            _css_template(options, sidebar_ratio),
             "",
         ]
     )
     return frontmatter + "\n---\n".join(slides)
 
 
-def _css_template(options: MarpOptions) -> str:
+def _css_template(options: MarpOptions, sidebar_ratio: str) -> str:
+    font_size_raw = str(options.font_size) if options.font_size is not None else "24"
+    font_size_css = html.escape(font_size_raw, quote=False) or "24px"
+
     return f"""<style>
 section {{ font-family: Arial, sans-serif; color: #111827; padding: 34px 42px; }}
 h1 {{ color: #1d4ed8; font-size: 44px; margin: 0 0 12px; }}
 h2 {{ color: #1d4ed8; font-size: 36px; margin: 0 0 10px; }}
 .meta {{ display: flex; flex-wrap: wrap; gap: 18px; font-size: 18px; font-weight: 700; border-bottom: 2px solid #d1d5db; padding-bottom: 8px; margin-bottom: 16px; }}
-.layout {{ display: grid; grid-template-columns: 2.1fr 0.9fr; gap: 22px; }}
-.line {{ font-family: "Courier New", monospace; font-size: {html.escape(options.font_size)}; line-height: 1.3; margin: 10px 0; }}
+.layout {{ display: grid; grid-template-columns: 2.1fr {sidebar_ratio}; gap: 22px; }}
+.layout--solo {{ display: block; }}
+.line {{ font-family: "Courier New", monospace; font-size: {font_size_css}; line-height: 1.3; margin: 10px 0; }}
 .chord {{ color: #c2410c; font-weight: 800; }}
 .lyric {{ color: #111827; }}
 .song-map {{ font-size: 18px; line-height: 1.5; }}
 .current {{ background: #dbeafe; color: #1d4ed8; font-weight: 800; padding: 2px 6px; border-radius: 4px; }}
-.cue-box {{ background: #eef2f7; border-left: 6px solid #64748b; padding: 12px 14px; font-size: 21px; line-height: 1.35; }}
+.cue-box {{ background: #eef2ff; border-left: 6px solid #6366f1; padding: 12px 14px; font-size: 21px; line-height: 1.35; }}
 .notes {{ margin-top: 14px; font-size: 20px; line-height: 1.35; }}
+.navigation-strip {{ display: flex; flex-wrap: wrap; gap: 8px; font-size: 16px; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; }}
+.navigation-strip .current {{ background: #1d4ed8; color: #ffffff; }}
 </style>"""
 
 
-def _generate_title_slide(song: SongYAML, options: MarpOptions) -> str:
+def _generate_title_slide(
+    song: SongYAML, options: MarpOptions, preset: dict[str, object]
+) -> str:
     parts = [f"# {_escape(song.title)}"]
 
     if options.show_metadata:
@@ -105,12 +200,13 @@ def _generate_title_slide(song: SongYAML, options: MarpOptions) -> str:
     if options.show_song_map and song.arrangement:
         parts.append(f"**Song map:** {_render_song_map(song.arrangement)}")
 
-    general_notes = _practice_notes(song, "general")
-    if options.show_practice_notes and general_notes:
-        parts.append(_cue_box(general_notes))
+    if options.show_practice_notes and preset.get("show_general_cue_box", True):
+        general_notes = _practice_notes(song, "general")
+        if general_notes:
+            parts.append(_cue_box(general_notes))
 
-    if song.copyright:
-        parts.append(f"<div class=\"notes\">{_escape(song.copyright)}</div>")
+    if preset.get("show_copyright", True) and song.copyright:
+        parts.append(f'<div class="notes">{_escape(song.copyright)}</div>')
 
     return "\n\n".join(parts).strip()
 
@@ -121,8 +217,21 @@ def _generate_section_slide(
     current_index: int,
     next_section: str | None,
     options: MarpOptions,
+    preset: dict[str, object],
 ) -> str:
     parts = [f"## {_escape(section.name)}"]
+
+    # Practice-mode navigation strip showing the full song map. Per
+    # Requirement 17.4, this is visible on all slides in practice style;
+    # other styles either render it in the sidebar or hide it entirely
+    # depending on their preset. The user's MarpOptions.show_song_map
+    # toggle always wins so an explicit request to hide the map is
+    # honoured even when the style preset would otherwise show it.
+    show_strip = options.show_song_map and bool(
+        preset.get("song_map_on_section_slides", True)
+    )
+    if show_strip and song.arrangement:
+        parts.append(_navigation_strip(song.arrangement, current_index))
 
     if options.show_metadata:
         parts.append(_metadata_bar(song))
@@ -132,7 +241,8 @@ def _generate_section_slide(
         for line in section.lines
     )
 
-    sidebar_parts = []
+    sidebar_parts: list[str] = []
+
     if options.show_song_map:
         sidebar_parts.append(_render_song_map(song.arrangement, current_index))
 
@@ -141,22 +251,35 @@ def _generate_section_slide(
         sidebar_parts.append(f"Current cue: {_escape('; '.join(section_notes))}")
 
     sidebar_parts.append(f"Next: {_escape(next_section) if next_section else 'End'}")
-    sidebar_html = "<br><br>\n".join(sidebar_parts)
-
-    parts.append(
-        "\n".join(
-            [
-                '<div class="layout">',
-                "<div>",
-                lines_html,
-                "</div>",
-                '<div class="song-map">',
-                sidebar_html,
-                "</div>",
-                "</div>",
-            ]
+    sidebar_ratio = str(preset.get("sidebar_ratio", "0.9fr"))
+    has_sidebar = sidebar_ratio != "0fr"
+    layout_class = "layout" if has_sidebar else "layout layout--solo"
+    if has_sidebar:
+        sidebar_html = "<br><br>\n".join(sidebar_parts)
+        parts.append(
+            "\n".join(
+                [
+                    f'<div class="{layout_class}">',
+                    "<div>",
+                    lines_html,
+                    "</div>",
+                    '<div class="song-map">',
+                    sidebar_html,
+                    "</div>",
+                    "</div>",
+                ]
+            )
         )
-    )
+    else:
+        parts.append(
+            "\n".join(
+                [
+                    f'<div class="{layout_class}">',
+                    lines_html,
+                    "</div>",
+                ]
+            )
+        )
 
     return "\n\n".join(parts).strip()
 
@@ -187,6 +310,18 @@ def _render_song_map(arrangement: list[str], current_index: int | None = None) -
             rendered_sections.append(escaped_name)
 
     return " &rarr; ".join(rendered_sections)
+
+
+def _navigation_strip(arrangement: list[str], current_index: int) -> str:
+    """Compact song map strip placed at the top of each section slide."""
+    items = []
+    for index, section_name in enumerate(arrangement):
+        escaped_name = _escape(section_name)
+        if index == current_index:
+            items.append(f'<span class="current">{escaped_name}</span>')
+        else:
+            items.append(escaped_name)
+    return f'<div class="navigation-strip">{"".join(items)}</div>'
 
 
 def _section_notes(song: SongYAML, section: SongSection) -> list[str]:
