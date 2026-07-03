@@ -10,6 +10,7 @@ dist/
 .venv/
 
 # Test & coverage output
+.hypothesis/
 .pytest_cache/
 .coverage
 .coverage.*
@@ -31,11 +32,16 @@ data/saved_slides/
 # Log files
 *.log
 
-# Editors
 # VSCode
 .vscode/
+
+# Codex
+.codex/
 
 # Kiro runtime state
 .kiro/state/
 .kiro/cache/
 .kiro/logs/
+
+# Codegraph runtime state (local PID/socket, regenerated on every daemon start)
+.codegraph/daemon.pid
