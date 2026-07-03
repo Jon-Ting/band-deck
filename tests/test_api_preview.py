@@ -131,12 +131,14 @@ def test_preview_endpoint_injects_body_background_override(monkeypatch):
         '<style>body { background: #ffffff; color: #111827; }</style>'
         in payload["html_content"]
     )
-    # Injected inside <head> so it parses before the body renders.
+    # Injected at the </head> slice boundary, so in the rendered HTML the
+    # override sits BEFORE </head> (its starting index is lower than the
+    # </head> match position in the post-render string).
     head_end = payload["html_content"].lower().find("</head>")
     injection_idx = payload["html_content"].find(
         '<style>body { background: #ffffff;'
     )
-    assert 0 <= head_end < injection_idx
+    assert 0 <= injection_idx < head_end
 
 
 def test_preview_endpoint_body_background_override_is_idempotent(monkeypatch):

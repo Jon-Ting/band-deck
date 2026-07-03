@@ -15,6 +15,23 @@ from src.utils.slide_storage import (
 )
 
 
+def test_slides_dir_resolves_under_data_saved_slides():
+    """Smoke test: ``SLIDES_DIR`` points at ``<project_root>/data/saved_slides``.
+
+    Asserts the relocation correctness property end-to-end:
+
+    - the path resolves to a ``data/saved_slides`` tail (not ``src/saved_slides``),
+    - the directory exists on disk (auto-created at import time).
+    """
+    # Path parts comparison is robust to absolute-prefix variation across hosts.
+    assert SLIDES_DIR.parts[-2:] == ("data", "saved_slides"), (
+        f"SLIDES_DIR should end with data/saved_slides, got {SLIDES_DIR}"
+    )
+    assert "src/saved_slides" not in str(SLIDES_DIR)
+    # Auto-created at module import time via SLIDES_DIR.mkdir(parents=True, exist_ok=True).
+    assert SLIDES_DIR.exists(), f"SLIDES_DIR does not exist on disk: {SLIDES_DIR}"
+
+
 class TestSlideStorage:
     """Tests for multi-format slide storage functionality."""
 
