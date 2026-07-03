@@ -9,15 +9,12 @@ import pytest
 from src.utils.slide_storage import save_slide, update_slide, SLIDES_DIR
 
 
-@pytest.fixture
-def sample_song_data():
-    """Sample song data for testing."""
-    return {
-        "title": "Original Song",
-        "search_name": "Original Song",
-        "artist": "Original Artist",
-        "key": "C",
-        "content": """Verse 1
+SAMPLE_SONG_DATA = {
+    "title": "Original Song",
+    "search_name": "Original Song",
+    "artist": "Original Artist",
+    "key": "C",
+    "content": """Verse 1
 C       G       Am      F
 This is a test song lyric
 C       G       F       C
@@ -28,28 +25,24 @@ F       C       G       Am
 Test chorus goes here
 F       C       G       C
 Ending of the chorus""",
-        "bpm": 120,
-        "time_signature": "4/4",
-        "ccli_number": "1234567",
-    }
+    "bpm": 120,
+    "time_signature": "4/4",
+    "ccli_number": "1234567",
+}
 
 
 @pytest.fixture
-def saved_slide(sample_song_data):
+def saved_slide():
     """Create a saved slide and return its metadata."""
-    meta = save_slide(sample_song_data, formats=["pptx", "yaml", "marp", "html"])
+    meta = save_slide(SAMPLE_SONG_DATA, formats=["yaml", "marp", "html"])
     yield meta
     # Cleanup after test
     from src.utils.slide_storage import delete_slide
     delete_slide(meta["id"])
 
 
-def test_update_slide_basic(saved_slide):
-    """Test basic slide update with modified song data."""
-    slide_id = saved_slide["id"]
-    
-    # Prepare modified song data
-    modified_song = {
+def _modified_song_payload() -> dict:
+    return {
         "title": "Updated Song Title",
         "authors": ["Updated Artist", "Co-Writer"],
         "target_key": "D",
@@ -74,15 +67,22 @@ def test_update_slide_basic(saved_slide):
         "time_signature": "3/4",
         "ccli_number": "7654321",
     }
-    
+
+
+def test_update_slide_basic(saved_slide):
+    """Test basic slide update with modified song data."""
+    slide_id = saved_slide["id"]
+
+    modified_song = _modified_song_payload()
+
     request_data = {
         "song": modified_song,
-        "formats": ["yaml", "marp", "html", "pptx"]
+        "formats": ["yaml", "marp", "html"]
     }
-    
+
     # Update the slide
     updated_meta = update_slide(slide_id, request_data)
-    
+
     # Verify metadata was updated
     assert updated_meta["id"] == slide_id
     assert updated_meta["title"] == "Updated Song Title"
@@ -93,12 +93,13 @@ def test_update_slide_basic(saved_slide):
     assert updated_meta["ccli_number"] == "7654321"
     assert updated_meta["created_at"] == saved_slide["created_at"]  # Preserved
     assert updated_meta["updated_at"] != saved_slide["updated_at"]  # Changed
-    
-    # Verify all formats were regenerated
-    assert set(updated_meta["filenames"].keys()) == {"yaml", "marp", "html", "pptx"}
-    
+
+    # Verify all formats were regenerated and PPTX is gone
+    assert set(updated_meta["filenames"].keys()) == {"yaml", "marp", "html"}
+    assert "pptx" not in updated_meta["filenames"]
+
     # Verify files exist
-    for format in ["yaml", "marp", "html", "pptx"]:
+    for format in ["yaml", "marp", "html"]:
         file_path = os.path.join(SLIDES_DIR, updated_meta["filenames"][format])
         assert os.path.exists(file_path), f"{format} file should exist"
 
@@ -106,7 +107,7 @@ def test_update_slide_basic(saved_slide):
 def test_update_slide_partial_formats(saved_slide):
     """Test updating only specific formats."""
     slide_id = saved_slide["id"]
-    
+
     modified_song = {
         "title": "Partially Updated",
         "authors": ["Test Artist"],
@@ -120,14 +121,14 @@ def test_update_slide_partial_formats(saved_slide):
         },
         "arrangement": ["Verse 1"],
     }
-    
+
     request_data = {
         "song": modified_song,
         "formats": ["yaml", "marp"]  # Only regenerate these
     }
-    
+
     updated_meta = update_slide(slide_id, request_data)
-    
+
     # Verify only requested formats are in metadata
     assert set(updated_meta["filenames"].keys()) == {"yaml", "marp"}
 
@@ -136,7 +137,7 @@ def test_update_slide_default_formats(saved_slide):
     """Test updating with default formats (use existing formats)."""
     slide_id = saved_slide["id"]
     original_formats = set(saved_slide["filenames"].keys())
-    
+
     modified_song = {
         "title": "Default Formats",
         "authors": ["Test Artist"],
@@ -150,14 +151,14 @@ def test_update_slide_default_formats(saved_slide):
         },
         "arrangement": ["Verse 1"],
     }
-    
+
     request_data = {
         "song": modified_song,
         # No formats specified - should use existing formats
     }
-    
+
     updated_meta = update_slide(slide_id, request_data)
-    
+
     # Verify same formats as original
     assert set(updated_meta["filenames"].keys()) == original_formats
 
@@ -165,7 +166,7 @@ def test_update_slide_default_formats(saved_slide):
 def test_update_slide_not_found():
     """Test updating a non-existent slide."""
     fake_id = "00000000-0000-0000-0000-000000000000"
-    
+
     request_data = {
         "song": {
             "title": "Test",
@@ -175,7 +176,7 @@ def test_update_slide_not_found():
             "arrangement": ["V1"],
         }
     }
-    
+
     with pytest.raises(FileNotFoundError):
         update_slide(fake_id, request_data)
 
@@ -183,9 +184,9 @@ def test_update_slide_not_found():
 def test_update_slide_missing_song_data(saved_slide):
     """Test updating without providing song data."""
     slide_id = saved_slide["id"]
-    
+
     request_data = {}  # Missing 'song' key
-    
+
     with pytest.raises(ValueError, match="Song data is required"):
         update_slide(slide_id, request_data)
 
@@ -193,7 +194,7 @@ def test_update_slide_missing_song_data(saved_slide):
 def test_update_slide_invalid_song_data(saved_slide):
     """Test updating with invalid song data."""
     slide_id = saved_slide["id"]
-    
+
     request_data = {
         "song": {
             # Missing required fields
@@ -201,13 +202,13 @@ def test_update_slide_invalid_song_data(saved_slide):
             "arrangement": []
         }
     }
-    
+
     with pytest.raises(ValueError, match="Invalid song data"):
         update_slide(slide_id, request_data)
 
 
 def test_update_slide_invalid_formats(saved_slide):
-    """Test updating with invalid format list."""
+    """Test updating with invalid format list (legacy pptx token rejected)."""
     slide_id = saved_slide["id"]
 
     modified_song = {
@@ -239,15 +240,7 @@ def test_update_slide_invalid_formats(saved_slide):
 
 
 class TestUpdateSlideEndpoint:
-    """Endpoint-level tests for /api/saved_slide/<slide_id> PUT.
-
-    These tests exercise the Flask route directly via test_client, covering
-    task 5.6 requirements:
-      * Add the PUT /api/saved_slide/{id} endpoint
-      * Accept modified YAML song data
-      * Regenerate all formats
-      * Update metadata timestamps
-    """
+    """Endpoint-level tests for /api/saved_slide/<slide_id> PUT."""
 
     def setup_method(self):
         """Redirect SLIDES_DIR to a temp dir so each test is isolated."""
@@ -278,31 +271,7 @@ class TestUpdateSlideEndpoint:
         """Helper: persist a slide directly through save_slide()."""
         return save_slide(song_data, formats=formats)
 
-    def _modified_song_payload(self) -> dict:
-        """A valid, complete SongYAML-shaped payload describing a new edit."""
-        return {
-            "title": "Edited Song Title",
-            "authors": ["Edited Artist"],
-            "target_key": "D",
-            "sections": {
-                "Verse 1": {
-                    "name": "Verse 1",
-                    "type": "verse",
-                    "lines": [{"chordpro": "[D]Edited [A]lyrics [Bm]here [G]"}],
-                },
-                "Chorus": {
-                    "name": "Chorus",
-                    "type": "chorus",
-                    "lines": [{"chordpro": "[G]Edited [D]chorus [A]now [D]"}],
-                },
-            },
-            "arrangement": ["Verse 1", "Chorus"],
-            "bpm": 100,
-            "time_signature": "4/4",
-            "ccli_number": "9999999",
-        }
-
-    def test_put_endpoint_returns_200_and_updated_metadata(self, monkeypatch):
+    def test_put_endpoint_returns_200_and_updated_metadata(self):
         """Happy path: PUT returns updated metadata with new title and timestamps."""
         meta = self._seed_slide(
             {
@@ -311,14 +280,14 @@ class TestUpdateSlideEndpoint:
                 "artist": "Original Artist",
                 "key": "C",
             },
-            formats=["pptx"],
+            formats=["yaml"],
         )
 
         client = self._make_client()
         response = client.put(
             f"/api/saved_slide/{meta['id']}",
             json={
-                "song": self._modified_song_payload(),
+                "song": _modified_song_payload(),
                 "formats": ["yaml"],
             },
         )
@@ -326,18 +295,38 @@ class TestUpdateSlideEndpoint:
         assert response.status_code == 200
         body = response.get_json()
         assert body["id"] == meta["id"]
-        assert body["title"] == "Edited Song Title"
+        assert body["title"] == "Updated Song Title"
         assert body["key"] == "D"
-        assert body["bpm"] == 100
-        assert body["ccli_number"] == "9999999"
+        assert body["bpm"] == 140
+        assert body["ccli_number"] == "7654321"
         # created_at is preserved; updated_at advances
         assert body["created_at"] == meta["created_at"]
         assert body["updated_at"] != meta["updated_at"]
         # yaml was regenerated
         assert "yaml" in body["filenames"]
+        assert "pptx" not in body["filenames"]
         assert os.path.exists(
             os.path.join(self.temp_dir, body["filenames"]["yaml"])
         )
+
+    def test_put_endpoint_rejects_legacy_pptx_token(self):
+        """PUT must reject the legacy pptx token once PPTX export is gone."""
+        meta = self._seed_slide(
+            {"search_name": "Stub", "title": "Stub", "artist": "Stub"},
+            formats=["yaml"],
+        )
+
+        client = self._make_client()
+        response = client.put(
+            f"/api/saved_slide/{meta['id']}",
+            json={
+                "song": _modified_song_payload(),
+                "formats": ["yaml", "pptx"],
+            },
+        )
+
+        assert response.status_code == 400
+        assert "Invalid formats" in response.get_json()["error"]
 
     def test_put_endpoint_regenerates_requested_formats(self, monkeypatch):
         """When formats=['yaml','marp','html'], all three files regenerate.
@@ -359,14 +348,14 @@ class TestUpdateSlideEndpoint:
 
         meta = self._seed_slide(
             {"search_name": "Stub", "title": "Stub", "artist": "Stub"},
-            formats=["pptx"],
+            formats=["yaml"],
         )
 
         client = self._make_client()
         response = client.put(
             f"/api/saved_slide/{meta['id']}",
             json={
-                "song": self._modified_song_payload(),
+                "song": _modified_song_payload(),
                 "formats": ["yaml", "marp", "html"],
             },
         )
@@ -374,6 +363,7 @@ class TestUpdateSlideEndpoint:
         assert response.status_code == 200
         body = response.get_json()
         assert set(body["filenames"].keys()) == {"yaml", "marp", "html"}
+        assert "pptx" not in body["filenames"]
         for fmt in ("yaml", "marp", "html"):
             assert os.path.exists(
                 os.path.join(self.temp_dir, body["filenames"][fmt])
@@ -383,25 +373,26 @@ class TestUpdateSlideEndpoint:
         """Omitting formats regenerates the formats the slide already had."""
         meta = self._seed_slide(
             {"search_name": "Defaults", "title": "Defaults", "artist": "Defaults"},
-            formats=["pptx", "yaml"],
+            formats=["yaml", "html"],
         )
 
         client = self._make_client()
         response = client.put(
             f"/api/saved_slide/{meta['id']}",
-            json={"song": self._modified_song_payload()},
+            json={"song": _modified_song_payload()},
         )
 
         assert response.status_code == 200
         body = response.get_json()
-        assert set(body["filenames"].keys()) == {"pptx", "yaml"}
+        assert set(body["filenames"].keys()) == {"yaml", "html"}
+        assert "pptx" not in body["filenames"]
 
     def test_put_endpoint_returns_404_for_nonexistent_slide(self):
         """Non-existent slide_id → 404 with explanatory error."""
         client = self._make_client()
         response = client.put(
             "/api/saved_slide/00000000-0000-0000-0000-000000000000",
-            json={"song": self._modified_song_payload(), "formats": ["yaml"]},
+            json={"song": _modified_song_payload(), "formats": ["yaml"]},
         )
 
         assert response.status_code == 404
@@ -411,7 +402,7 @@ class TestUpdateSlideEndpoint:
         """Empty body / missing 'song' key → 400."""
         meta = self._seed_slide(
             {"search_name": "NoSong", "title": "NoSong"},
-            formats=["pptx"],
+            formats=["yaml"],
         )
         client = self._make_client()
 
@@ -429,19 +420,16 @@ class TestUpdateSlideEndpoint:
         """Unknown format tokens → 400 with Invalid formats."""
         meta = self._seed_slide(
             {"search_name": "BadFmt", "title": "BadFmt"},
-            formats=["pptx"],
+            formats=["yaml"],
         )
         client = self._make_client()
         response = client.put(
             f"/api/saved_slide/{meta['id']}",
             json={
-                "song": self._modified_song_payload(),
+                "song": _modified_song_payload(),
                 "formats": ["yaml", "bogus", "pptx"],
             },
         )
 
         assert response.status_code == 400
         assert "Invalid formats" in response.get_json()["error"]
-
-
-

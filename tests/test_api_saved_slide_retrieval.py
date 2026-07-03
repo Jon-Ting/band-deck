@@ -50,89 +50,88 @@ class TestSavedSlideRetrievalEndpoints:
     def test_list_slides_includes_format_availability(self):
         """Test that /api/saved_slides includes filenames dict showing format availability."""
         client = make_client()
-        
+
         # Save a slide with multiple formats
         song_data = make_song_data()
-        song_data["formats"] = ["yaml", "html", "pptx"]
+        song_data["formats"] = ["yaml", "html", "marp"]
         response = client.post("/api/save_slide", json=song_data)
         assert response.status_code == 200
-        
+
         # List slides
         response = client.get("/api/saved_slides")
         assert response.status_code == 200
-        
+
         slides = response.get_json()
         assert len(slides) == 1
-        
+
         slide = slides[0]
         assert "filenames" in slide
-        assert "yaml" in slide["filenames"]
-        assert "html" in slide["filenames"]
-        assert "pptx" in slide["filenames"]
-        assert "marp" not in slide["filenames"]  # Not requested
+        assert set(slide["filenames"].keys()) == {"yaml", "html", "marp"}
+        assert "pptx" not in slide["filenames"]
 
     def test_list_slides_shows_different_format_availability_per_slide(self):
         """Test that different slides can have different available formats."""
         client = make_client()
-        
+
         # Save first slide with YAML only
         song_data1 = make_song_data()
         song_data1["search_name"] = "Song 1"
         song_data1["formats"] = ["yaml"]
         response1 = client.post("/api/save_slide", json=song_data1)
         assert response1.status_code == 200
-        
-        # Save second slide with all formats
+
+        # Save second slide with multiple formats
         song_data2 = make_song_data()
         song_data2["search_name"] = "Song 2"
-        song_data2["formats"] = ["yaml", "marp", "html", "pptx"]
+        song_data2["formats"] = ["yaml", "marp", "html"]
         response2 = client.post("/api/save_slide", json=song_data2)
         assert response2.status_code == 200
-        
+
         # List slides
         response = client.get("/api/saved_slides")
         assert response.status_code == 200
-        
+
         slides = response.get_json()
         assert len(slides) == 2
-        
+
         # Find each slide by title
         slide1 = next(s for s in slides if s["title"] == "Song 1")
         slide2 = next(s for s in slides if s["title"] == "Song 2")
-        
-        # Verify format availability differs
-        assert len(slide1["filenames"]) == 1
-        assert "yaml" in slide1["filenames"]
-        
-        assert len(slide2["filenames"]) == 4
-        assert all(fmt in slide2["filenames"] for fmt in ["yaml", "marp", "html", "pptx"])
 
-    def test_download_slide_format_pptx(self):
-        """Test downloading a slide in PPTX format."""
+        # Verify format availability differs
+        assert set(slide1["filenames"].keys()) == {"yaml"}
+        assert "pptx" not in slide1["filenames"]
+
+        assert set(slide2["filenames"].keys()) == {"yaml", "marp", "html"}
+        assert "pptx" not in slide2["filenames"]
+
+    def test_download_slide_legacy_pptx_format_rejected(self):
+        """The legacy PPTX format is no longer a valid download option."""
         client = make_client()
-        
-        # Save a slide with PPTX format
+
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
-        # Download PPTX
+
         response = client.get(f"/api/saved_slide/{slide_id}/download/pptx")
-        assert response.status_code == 200
-        assert response.mimetype == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        assert "Amazing Grace - John Newton.pptx" in response.headers.get("Content-Disposition", "")
+        # PPTX is no longer in valid_formats, so the request is rejected as
+        # an invalid format rather than being treated as a missing file.
+        assert response.status_code == 400
+        body = response.get_json()
+        assert "Invalid format" in body["error"]
+        assert "pptx" not in body["valid_formats"]
 
     def test_download_slide_format_html(self):
         """Test downloading a slide in HTML format."""
         client = make_client()
-        
+
         # Save a slide with HTML format
         song_data = make_song_data()
         song_data["formats"] = ["html"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Download HTML
         response = client.get(f"/api/saved_slide/{slide_id}/download/html")
         assert response.status_code == 200
@@ -142,13 +141,13 @@ class TestSavedSlideRetrievalEndpoints:
     def test_download_slide_format_yaml(self):
         """Test downloading a slide in YAML format."""
         client = make_client()
-        
+
         # Save a slide with YAML format
         song_data = make_song_data()
         song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Download YAML
         response = client.get(f"/api/saved_slide/{slide_id}/download/yaml")
         assert response.status_code == 200
@@ -158,13 +157,13 @@ class TestSavedSlideRetrievalEndpoints:
     def test_download_slide_format_marp(self):
         """Test downloading a slide in Marp markdown format."""
         client = make_client()
-        
+
         # Save a slide with Marp format
         song_data = make_song_data()
         song_data["formats"] = ["marp"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Download Marp
         response = client.get(f"/api/saved_slide/{slide_id}/download/marp")
         assert response.status_code == 200
@@ -174,13 +173,13 @@ class TestSavedSlideRetrievalEndpoints:
     def test_download_slide_format_unavailable(self):
         """Test that requesting an unavailable format returns 404."""
         client = make_client()
-        
+
         # Save a slide with only YAML format
         song_data = make_song_data()
         song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Try to download HTML (not available)
         response = client.get(f"/api/saved_slide/{slide_id}/download/html")
         assert response.status_code == 404
@@ -188,18 +187,18 @@ class TestSavedSlideRetrievalEndpoints:
         assert "error" in result
         assert "not available" in result["error"]
         assert "available_formats" in result
-        assert result["available_formats"] == ["yaml"]
+        assert set(result["available_formats"]) == {"yaml"}
 
     def test_download_slide_invalid_format(self):
         """Test that requesting an invalid format returns 400."""
         client = make_client()
-        
+
         # Save a slide
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Try to download with invalid format
         response = client.get(f"/api/saved_slide/{slide_id}/download/invalid")
         assert response.status_code == 400
@@ -207,13 +206,14 @@ class TestSavedSlideRetrievalEndpoints:
         assert "error" in result
         assert "Invalid format" in result["error"]
         assert "valid_formats" in result
+        assert "pptx" not in result["valid_formats"]
 
     def test_download_slide_nonexistent_id(self):
         """Test that requesting a non-existent slide returns 404."""
         client = make_client()
-        
+
         # Try to download from non-existent slide
-        response = client.get("/api/saved_slide/nonexistent-id/download/pptx")
+        response = client.get("/api/saved_slide/nonexistent-id/download/yaml")
         assert response.status_code == 404
         result = response.get_json()
         assert "error" in result
@@ -222,76 +222,77 @@ class TestSavedSlideRetrievalEndpoints:
     def test_download_slide_filename_without_artist(self):
         """Test download filename when artist is not present."""
         client = make_client()
-        
+
         # Save a slide without artist
         song_data = make_song_data()
         song_data["artist"] = None
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Download
-        response = client.get(f"/api/saved_slide/{slide_id}/download/pptx")
+        response = client.get(f"/api/saved_slide/{slide_id}/download/yaml")
         assert response.status_code == 200
         # Should not have artist in filename
-        assert "Amazing Grace.pptx" in response.headers.get("Content-Disposition", "")
+        assert "Amazing Grace.yaml" in response.headers.get("Content-Disposition", "")
         assert " - " not in response.headers.get("Content-Disposition", "")
 
-    def test_download_all_supported_formats(self):
-        """Test downloading all supported formats (html, marp, yaml, pptx)."""
+    def test_download_all_supported_non_legacy_formats(self):
+        """Test downloading all supported non-legacy formats (html, marp, yaml)."""
         client = make_client()
-        
+
         # Save a slide with all formats
         song_data = make_song_data()
-        song_data["formats"] = ["html", "marp", "yaml", "pptx"]
+        song_data["formats"] = ["html", "marp", "yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Test each format
-        formats_to_test = ["html", "marp", "yaml", "pptx"]
+        formats_to_test = ["html", "marp", "yaml"]
         for fmt in formats_to_test:
             response = client.get(f"/api/saved_slide/{slide_id}/download/{fmt}")
             assert response.status_code == 200, f"Failed to download format: {fmt}"
 
-    def test_backward_compatibility_old_download_endpoint(self):
-        """Test that old /api/saved_slide/{id} GET endpoint still works for PPTX."""
+    def test_legacy_unversioned_download_endpoint_removed(self):
+        """The unversioned ``/api/saved_slide/<id>`` GET endpoint is gone now
+        that PPTX is no longer the implicit default format. Callers must use
+        the explicit ``/api/saved_slide/<id>/download/<format>`` endpoint."""
         client = make_client()
-        
-        # Save a slide with PPTX
+
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml", "html"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
-        # Use old endpoint
+
         response = client.get(f"/api/saved_slide/{slide_id}")
-        assert response.status_code == 200
-        assert response.mimetype == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        assert response.status_code == 404
 
     def test_download_format_case_sensitivity(self):
         """Test that format parameter is case-sensitive (lowercase required)."""
         client = make_client()
-        
+
         # Save a slide
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Try uppercase format
-        response = client.get(f"/api/saved_slide/{slide_id}/download/PPTX")
+        response = client.get(f"/api/saved_slide/{slide_id}/download/YAML")
         assert response.status_code == 400  # Should reject uppercase
 
-    def test_pdf_format_support(self):
-        """Test that PDF format is recognized as valid (even if not yet implemented)."""
+    def test_pdf_format_recognised_but_never_generated(self):
+        """PDF is recognised as a valid format token but not generated by the
+        server-side pipeline; requesting it falls back to ``404 not available``
+        rather than ``400 invalid format``."""
         client = make_client()
-        
+
         # Save a slide
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
         response = client.post("/api/save_slide", json=song_data)
         slide_id = response.get_json()["id"]
-        
+
         # Try to download PDF (should be valid format but not available)
         response = client.get(f"/api/saved_slide/{slide_id}/download/pdf")
         # Should return 404 (not available) not 400 (invalid format)

@@ -36,8 +36,8 @@ class TestSlideStorage:
 
         storage_module.SLIDES_DIR = self.original_slides_dir
 
-    def test_save_slide_pptx_only_backward_compatibility(self):
-        """Test backward compatibility - saving only PPTX format."""
+    def test_save_slide_yaml_only_backward_compatibility(self):
+        """Backward compatibility: omitting formats gives YAML/Marp/HTML, no PPTX."""
         song_data = {
             "search_name": "Amazing Grace",
             "title": "Amazing Grace (Official)",
@@ -48,7 +48,7 @@ class TestSlideStorage:
             "ccli_number": "1234567",
         }
 
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data)
 
         # Verify metadata structure
         assert "id" in meta
@@ -59,10 +59,11 @@ class TestSlideStorage:
         assert meta["time_signature"] == "3/4"
         assert meta["ccli_number"] == "1234567"
 
-        # Verify filenames dict
+        # Verify filenames dict now uses the supported formats and never
+        # includes the legacy PPTX format.
         assert "filenames" in meta
-        assert "pptx" in meta["filenames"]
-        assert meta["filenames"]["pptx"].endswith(".pptx")
+        assert set(meta["filenames"].keys()) == {"yaml", "marp", "html"}
+        assert "pptx" not in meta["filenames"]
 
         # Verify timestamps
         assert "created_at" in meta
@@ -73,53 +74,47 @@ class TestSlideStorage:
         created = datetime.fromisoformat(meta["created_at"])
         assert created.tzinfo is not None
 
-        # Verify only PPTX file was created
+        # Verify expected files were created
         slide_id = meta["id"]
-        assert os.path.exists(_slide_path(slide_id, "pptx"))
-        assert not os.path.exists(_slide_path(slide_id, "yaml"))
-        assert not os.path.exists(_slide_path(slide_id, "marp"))
-        assert not os.path.exists(_slide_path(slide_id, "html"))
+        assert os.path.exists(_slide_path(slide_id, "yaml"))
+        assert os.path.exists(_slide_path(slide_id, "marp"))
+        assert os.path.exists(_slide_path(slide_id, "html"))
 
     def test_save_slide_multi_format(self):
-        """Test saving slide in multiple formats (YAML, Marp, HTML, PPTX)."""
+        """Test saving slide in multiple formats (YAML, Marp, HTML)."""
         song_data = {
             "search_name": "How Great Thou Art",
             "artist": "Carl Boberg",
             "key": "C",
         }
 
-        meta = save_slide(song_data, formats=["yaml", "marp", "html", "pptx"])
+        meta = save_slide(song_data, formats=["yaml", "marp", "html"])
 
         # Verify all formats in filenames dict
         assert "filenames" in meta
-        assert "yaml" in meta["filenames"]
-        assert "marp" in meta["filenames"]
-        assert "html" in meta["filenames"]
-        assert "pptx" in meta["filenames"]
+        assert set(meta["filenames"].keys()) == {"yaml", "marp", "html"}
+        assert "pptx" not in meta["filenames"]
 
         # Verify all files were created
         slide_id = meta["id"]
         assert os.path.exists(_slide_path(slide_id, "yaml"))
         assert os.path.exists(_slide_path(slide_id, "marp"))
         assert os.path.exists(_slide_path(slide_id, "html"))
-        assert os.path.exists(_slide_path(slide_id, "pptx"))
 
         # Verify file extensions in filenames
         assert meta["filenames"]["yaml"].endswith(".yaml")
         assert meta["filenames"]["marp"].endswith(".marp.md")
         assert meta["filenames"]["html"].endswith(".html")
-        assert meta["filenames"]["pptx"].endswith(".pptx")
 
     def test_save_slide_yaml_and_html_only(self):
-        """Test saving only YAML and HTML formats (no PPTX)."""
+        """Test saving only YAML and HTML formats."""
         song_data = {"search_name": "Cornerstone", "artist": "Hillsong", "key": "E"}
 
         meta = save_slide(song_data, formats=["yaml", "html"])
 
         # Verify only requested formats in filenames dict
         assert "filenames" in meta
-        assert "yaml" in meta["filenames"]
-        assert "html" in meta["filenames"]
+        assert set(meta["filenames"].keys()) == {"yaml", "html"}
         assert "pptx" not in meta["filenames"]
         assert "marp" not in meta["filenames"]
 
@@ -127,11 +122,22 @@ class TestSlideStorage:
         slide_id = meta["id"]
         assert os.path.exists(_slide_path(slide_id, "yaml"))
         assert os.path.exists(_slide_path(slide_id, "html"))
-        assert not os.path.exists(_slide_path(slide_id, "pptx"))
         assert not os.path.exists(_slide_path(slide_id, "marp"))
 
-    def test_save_slide_defaults_to_pptx(self):
-        """Test that omitting formats parameter defaults to PPTX only."""
+    def test_save_slide_yaml_only(self):
+        """Test saving only YAML format."""
+        song_data = {"search_name": "Mighty God", "artist": "Bethel", "key": "G"}
+
+        meta = save_slide(song_data, formats=["yaml"])
+
+        # Verify only YAML in filenames
+        assert set(meta["filenames"].keys()) == {"yaml"}
+        assert "pptx" not in meta["filenames"]
+        assert "marp" not in meta["filenames"]
+        assert "html" not in meta["filenames"]
+
+    def test_save_slide_defaults_to_yaml_marp_html(self):
+        """Test that omitting formats parameter defaults to YAML/Marp/HTML."""
         song_data = {
             "search_name": "Blessed Be Your Name",
             "artist": "Matt Redman",
@@ -140,13 +146,14 @@ class TestSlideStorage:
 
         meta = save_slide(song_data)  # No formats parameter
 
-        # Should default to PPTX only
+        # Should default to YAML/Marp/HTML now that PPTX is gone
         assert "filenames" in meta
-        assert "pptx" in meta["filenames"]
-        assert len(meta["filenames"]) == 1
+        assert set(meta["filenames"].keys()) == {"yaml", "marp", "html"}
 
         slide_id = meta["id"]
-        assert os.path.exists(_slide_path(slide_id, "pptx"))
+        assert os.path.exists(_slide_path(slide_id, "yaml"))
+        assert os.path.exists(_slide_path(slide_id, "marp"))
+        assert os.path.exists(_slide_path(slide_id, "html"))
 
     def test_metadata_persisted_to_json(self):
         """Test that metadata is correctly saved to JSON file."""
@@ -180,12 +187,12 @@ class TestSlideStorage:
     def test_list_slides_returns_all_saved_slides(self):
         """Test listing all saved slides."""
         # Save multiple slides
-        save_slide({"search_name": "Song 1", "artist": "Artist 1"}, formats=["pptx"])
+        save_slide({"search_name": "Song 1", "artist": "Artist 1"}, formats=["yaml"])
         save_slide(
             {"search_name": "Song 2", "artist": "Artist 2"}, formats=["yaml", "html"]
         )
         save_slide(
-            {"search_name": "Song 3", "artist": "Artist 3"}, formats=["marp", "pptx"]
+            {"search_name": "Song 3", "artist": "Artist 3"}, formats=["marp", "html"]
         )
 
         slides = list_slides()
@@ -199,7 +206,7 @@ class TestSlideStorage:
     def test_get_slide_retrieves_metadata(self):
         """Test retrieving a specific slide's metadata."""
         song_data = {"search_name": "Test Song", "artist": "Test Artist"}
-        meta = save_slide(song_data, formats=["yaml", "pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         retrieved = get_slide(meta["id"])
 
@@ -216,7 +223,7 @@ class TestSlideStorage:
     def test_get_slide_file_returns_correct_paths(self):
         """Test retrieving file paths for different formats."""
         song_data = {"search_name": "Multi Format Song"}
-        meta = save_slide(song_data, formats=["yaml", "marp", "html", "pptx"])
+        meta = save_slide(song_data, formats=["yaml", "marp", "html"])
         slide_id = meta["id"]
 
         # Verify each format returns correct path
@@ -235,32 +242,38 @@ class TestSlideStorage:
         assert html_path.endswith(".html")
         assert os.path.exists(html_path)
 
-        pptx_path = get_slide_file(slide_id, "pptx")
-        assert pptx_path is not None
-        assert pptx_path.endswith(".pptx")
-        assert os.path.exists(pptx_path)
-
     def test_get_slide_file_returns_none_for_unsaved_format(self):
         """Test that get_slide_file returns None for formats not saved."""
-        song_data = {"search_name": "PPTX Only Song"}
-        meta = save_slide(song_data, formats=["pptx"])
+        song_data = {"search_name": "YAML Only Song"}
+        meta = save_slide(song_data, formats=["yaml"])
         slide_id = meta["id"]
 
-        # YAML was not saved, should return None
-        yaml_path = get_slide_file(slide_id, "yaml")
-        assert yaml_path is None
+        # HTML was not saved, should return None
+        html_path = get_slide_file(slide_id, "html")
+        assert html_path is None
+
+    def test_get_slide_file_rejects_legacy_pptx_format(self):
+        """Test that pptx is no longer a recognised format on retrieval."""
+        song_data = {"search_name": "Legacy Format Song"}
+        meta = save_slide(song_data, formats=["yaml"])
+        slide_id = meta["id"]
+
+        # The legacy PPTX format path helper would compute a non-existent file.
+        # The filename does not exist on disk and the metadata does not list it.
+        pptx_path = get_slide_file(slide_id, "pptx")
+        assert pptx_path is None
+        assert "pptx" not in meta["filenames"]
 
     def test_delete_slide_removes_all_formats(self):
         """Test that deleting a slide removes all associated files."""
         song_data = {"search_name": "Delete Me"}
-        meta = save_slide(song_data, formats=["yaml", "marp", "html", "pptx"])
+        meta = save_slide(song_data, formats=["yaml", "marp", "html"])
         slide_id = meta["id"]
 
         # Verify files exist
         assert os.path.exists(_slide_path(slide_id, "yaml"))
         assert os.path.exists(_slide_path(slide_id, "marp"))
         assert os.path.exists(_slide_path(slide_id, "html"))
-        assert os.path.exists(_slide_path(slide_id, "pptx"))
         assert os.path.exists(_meta_path(slide_id))
 
         # Delete slide
@@ -271,8 +284,22 @@ class TestSlideStorage:
         assert not os.path.exists(_slide_path(slide_id, "yaml"))
         assert not os.path.exists(_slide_path(slide_id, "marp"))
         assert not os.path.exists(_slide_path(slide_id, "html"))
-        assert not os.path.exists(_slide_path(slide_id, "pptx"))
         assert not os.path.exists(_meta_path(slide_id))
+
+    def test_delete_slide_removes_legacy_pptx_file_if_present(self):
+        """Legacy PPTX artefacts left on disk after the migration are still
+        scrubbed by ``delete_slide`` to avoid orphaned clutter."""
+        song_data = {"search_name": "Old PPTX Slide"}
+        meta = save_slide(song_data, formats=["yaml"])
+        slide_id = meta["id"]
+
+        # Simulate a leftover legacy .pptx file (e.g. from a pre-removal install)
+        legacy_pptx = _slide_path(slide_id, "pptx")
+        with open(legacy_pptx, "wb") as fp:
+            fp.write(b"legacy pptx bytes")
+
+        assert delete_slide(slide_id) is True
+        assert not os.path.exists(legacy_pptx)
 
     def test_delete_slide_returns_false_for_nonexistent(self):
         """Test that deleting a nonexistent slide returns False."""
@@ -287,7 +314,7 @@ class TestSlideStorage:
             "artist": "Test Artist",
         }
 
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         # search_name should be used as the title
         assert meta["title"] == "User Input Name"
@@ -296,7 +323,7 @@ class TestSlideStorage:
         """Test that title is used when search_name is not present."""
         song_data = {"title": "Fallback Title", "artist": "Test Artist"}
 
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         assert meta["title"] == "Fallback Title"
 
@@ -311,7 +338,7 @@ class TestSlideStorage:
             "ccli_number": "9999999",
         }
 
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         assert meta["bpm"] == 120
         assert meta["time_signature"] == "4/4"
@@ -321,7 +348,7 @@ class TestSlideStorage:
         """Test that optional fields are not included when absent from song_data."""
         song_data = {"search_name": "Minimal Song", "artist": "Minimal Artist"}
 
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         assert "bpm" not in meta
         assert "time_signature" not in meta
@@ -330,7 +357,7 @@ class TestSlideStorage:
     def test_timestamps_are_iso8601_utc_format(self):
         """Test that timestamps follow ISO 8601 UTC format."""
         song_data = {"search_name": "Timestamp Test"}
-        meta = save_slide(song_data, formats=["pptx"])
+        meta = save_slide(song_data, formats=["yaml"])
 
         # Parse timestamps
         created_at = datetime.fromisoformat(meta["created_at"])
@@ -340,7 +367,7 @@ class TestSlideStorage:
         assert created_at.tzinfo == timezone.utc
         assert updated_at.tzinfo == timezone.utc
 
-        # Verify format matches expected (should contain 'Z' or timezone info)
+        # Verify format matches expected (should contain 'T' and timezone info)
         assert "T" in meta["created_at"]
         assert (
             "+" in meta["created_at"]
@@ -352,7 +379,6 @@ class TestSlideStorage:
         """Test that _slide_path helper generates correct file extensions."""
         slide_id = "test-uuid-123"
 
-        assert _slide_path(slide_id, "pptx").endswith(".pptx")
         assert _slide_path(slide_id, "yaml").endswith(".yaml")
         assert _slide_path(slide_id, "marp").endswith(".marp.md")
         assert _slide_path(slide_id, "html").endswith(".html")

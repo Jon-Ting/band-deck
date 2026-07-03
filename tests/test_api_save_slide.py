@@ -48,8 +48,8 @@ class TestSaveSlideEndpoint:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
         slide_storage.SLIDES_DIR = self.original_slides_dir
 
-    def test_save_slide_backward_compatibility_no_formats_parameter(self):
-        """Test backward compatibility - omitting formats defaults to PPTX."""
+    def test_save_slide_default_no_formats_returns_yaml_marp_html(self):
+        """Omitting formats yields YAML+Marp+HTML now that PPTX is gone."""
         client = make_client()
         song_data = make_song_data()
 
@@ -64,20 +64,14 @@ class TestSaveSlideEndpoint:
         assert result["artist"] == "John Newton"
         assert result["key"] == "G"
         assert "filenames" in result
-        assert "pptx" in result["filenames"]
-        assert result["filenames"]["pptx"].endswith(".pptx")
-
-        # Verify only PPTX was generated
-        assert len(result["filenames"]) == 1
-        assert "yaml" not in result["filenames"]
-        assert "marp" not in result["filenames"]
-        assert "html" not in result["filenames"]
+        assert set(result["filenames"].keys()) == {"yaml", "marp", "html"}
+        assert "pptx" not in result["filenames"]
 
     def test_save_slide_with_single_format(self):
         """Test saving with a single format specified."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
+        song_data["formats"] = ["yaml"]
 
         response = client.post("/api/save_slide", json=song_data)
 
@@ -85,39 +79,36 @@ class TestSaveSlideEndpoint:
         result = response.get_json()
 
         assert "filenames" in result
-        assert "pptx" in result["filenames"]
-        assert len(result["filenames"]) == 1
+        assert set(result["filenames"].keys()) == {"yaml"}
+        assert "pptx" not in result["filenames"]
 
     def test_save_slide_with_multiple_formats(self):
-        """Test saving with multiple formats (YAML, Marp, HTML, PPTX)."""
+        """Test saving with multiple formats (YAML, Marp, HTML)."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = ["yaml", "marp", "html", "pptx"]
+        song_data["formats"] = ["yaml", "marp", "html"]
 
         response = client.post("/api/save_slide", json=song_data)
 
         assert response.status_code == 200
         result = response.get_json()
 
-        # Verify all requested formats in filenames dict
         assert "filenames" in result
         assert "yaml" in result["filenames"]
         assert "marp" in result["filenames"]
         assert "html" in result["filenames"]
-        assert "pptx" in result["filenames"]
+        assert "pptx" not in result["filenames"]
 
         # Verify filename extensions
         assert result["filenames"]["yaml"].endswith(".yaml")
         assert result["filenames"]["marp"].endswith(".marp.md")
         assert result["filenames"]["html"].endswith(".html")
-        assert result["filenames"]["pptx"].endswith(".pptx")
 
         # Verify files exist
         slide_id = result["id"]
         assert os.path.exists(os.path.join(self.temp_dir, f"{slide_id}.yaml"))
         assert os.path.exists(os.path.join(self.temp_dir, f"{slide_id}.marp.md"))
         assert os.path.exists(os.path.join(self.temp_dir, f"{slide_id}.html"))
-        assert os.path.exists(os.path.join(self.temp_dir, f"{slide_id}.pptx"))
 
     def test_save_slide_with_partial_formats(self):
         """Test saving only specific formats (e.g., YAML and HTML)."""
@@ -130,17 +121,15 @@ class TestSaveSlideEndpoint:
         assert response.status_code == 200
         result = response.get_json()
 
-        # Verify only requested formats
         assert "filenames" in result
-        assert "yaml" in result["filenames"]
-        assert "html" in result["filenames"]
+        assert set(result["filenames"].keys()) == {"yaml", "html"}
         assert "pptx" not in result["filenames"]
         assert "marp" not in result["filenames"]
 
     def test_save_slide_nested_structure(self):
         """Test saving with nested song_data and formats structure."""
         client = make_client()
-        request_data = {"song_data": make_song_data(), "formats": ["yaml", "pptx"]}
+        request_data = {"song_data": make_song_data(), "formats": ["yaml", "html"]}
 
         response = client.post("/api/save_slide", json=request_data)
 
@@ -148,15 +137,14 @@ class TestSaveSlideEndpoint:
         result = response.get_json()
 
         assert "filenames" in result
-        assert "yaml" in result["filenames"]
-        assert "pptx" in result["filenames"]
-        assert len(result["filenames"]) == 2
+        assert set(result["filenames"].keys()) == {"yaml", "html"}
+        assert "pptx" not in result["filenames"]
 
     def test_save_slide_rejects_invalid_formats(self):
-        """Test that invalid format values are rejected."""
+        """Test that invalid format values are rejected (including legacy pptx)."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = ["pptx", "invalid_format", "another_bad_one"]
+        song_data["formats"] = ["yaml", "invalid_format", "pptx", "another_bad_one"]
 
         response = client.post("/api/save_slide", json=song_data)
 
@@ -165,12 +153,27 @@ class TestSaveSlideEndpoint:
         assert "error" in result
         assert "Invalid formats" in result["error"]
         assert "valid_formats" in result
+        # pptx must not appear in valid_formats now that the legacy export is gone
+        assert "pptx" not in result["valid_formats"]
+
+    def test_save_slide_rejects_legacy_pptx_token(self):
+        """Legacy ``pptx`` token must be rejected even if it is the only format."""
+        client = make_client()
+        song_data = make_song_data()
+        song_data["formats"] = ["pptx"]
+
+        response = client.post("/api/save_slide", json=song_data)
+
+        assert response.status_code == 400
+        result = response.get_json()
+        assert "Invalid formats" in result["error"]
+        assert "pptx" not in result["valid_formats"]
 
     def test_save_slide_rejects_non_list_formats(self):
         """Test that formats parameter must be a list."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = "pptx"  # String instead of list
+        song_data["formats"] = "yaml"  # String instead of list
 
         response = client.post("/api/save_slide", json=song_data)
 
@@ -193,7 +196,6 @@ class TestSaveSlideEndpoint:
         """Test that response includes created_at and updated_at timestamps."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
 
         response = client.post("/api/save_slide", json=song_data)
 
@@ -213,7 +215,6 @@ class TestSaveSlideEndpoint:
         """Test that optional metadata fields are included when present."""
         client = make_client()
         song_data = make_song_data()
-        song_data["formats"] = ["pptx"]
 
         response = client.post("/api/save_slide", json=song_data)
 
@@ -245,17 +246,16 @@ class TestSaveSlideEndpoint:
         assert response.status_code == 200
 
     def test_save_slide_all_supported_formats(self):
-        """Test saving with all supported formats to verify none are missing."""
+        """Test saving with all supported non-PPTX formats."""
         client = make_client()
         song_data = make_song_data()
-        # Note: 'pdf' is listed in requirements but not yet implemented in save_slide()
-        # Testing only implemented formats for now
-        song_data["formats"] = ["yaml", "marp", "html", "pptx"]
+        song_data["formats"] = ["yaml", "marp", "html"]
 
         response = client.post("/api/save_slide", json=song_data)
 
         assert response.status_code == 200
         result = response.get_json()
 
-        for format in ["yaml", "marp", "html", "pptx"]:
+        for format in ["yaml", "marp", "html"]:
             assert format in result["filenames"], f"Missing format: {format}"
+        assert "pptx" not in result["filenames"]

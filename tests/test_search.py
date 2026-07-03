@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import requests
-from src.utils.search import search_song
-from src.utils.pptx_generator import format_worship_together_url
+from src.utils.search import search_song, format_worship_together_url
 
 class TestSearchFunctionality(unittest.TestCase):
     def test_url_formatting(self):

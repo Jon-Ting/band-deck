@@ -1,5 +1,10 @@
 """Tests for the batch migration utility that backfills YAML/Marp/HTML
-files for legacy PPTX-only saved slides."""
+files for legacy saved slides.
+
+PPTX was retired together with this migration; the helper is now exercised
+against legacy metadata that may still carry an orphaned ``pptx`` filename
+tombstone, but the on-disk file is not produced or preserved by the
+migration itself."""
 
 from __future__ import annotations
 
@@ -43,7 +48,12 @@ class TestMigrationUtility:
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     def _seed_legacy_slide(self, slide_id: str, **overrides) -> dict:
-        """Create a metadata JSON that mimics a legacy PPTX-only slide."""
+        """Create a metadata JSON that mimics a legacy slide.
+
+        A tombstone ``pptx`` filename may be present to mirror metadata
+        written before PPTX was deprecated, but no actual ``.pptx`` file is
+        written — the migration utility never produces or reads one.
+        """
         meta = {
             "id": slide_id,
             "title": "Amazing Grace",
@@ -57,15 +67,17 @@ class TestMigrationUtility:
             "ccli_number": "1234567",
         }
         meta.update(overrides)
-        # Pretend the legacy PPTX file exists so deletion-style guardrails pass.
-        pptx_path = _slide_path(slide_id, "pptx")
-        os.makedirs(os.path.dirname(pptx_path), exist_ok=True)
-        with open(pptx_path, "wb") as pptx_file:
-            pptx_file.write(b"stub pptx bytes")
         _write_meta(slide_id, meta)
         return meta
 
     def test_migrates_pptx_only_slide_to_all_formats(self):
+        """Migration writes YAML/Marp/HTML for a legacy metadata-only slide.
+
+        The migration utility no longer creates or preserves a ``.pptx``
+        filesystem artefact (PowerPoint export was retired). The ``pptx``
+        filename entry remains in metadata as a tombstone for backward
+        compatibility.
+        """
         slide_id = "legacy-1"
         self._seed_legacy_slide(slide_id)
 
@@ -73,11 +85,12 @@ class TestMigrationUtility:
 
         assert stats == {"migrated": 1, "skipped": 0, "errors": 0}
 
-        # YAML/Marp/HTML files should now exist alongside the original PPTX
+        # YAML/Marp/HTML files exist after migration
         assert os.path.exists(_slide_path(slide_id, "yaml"))
         assert os.path.exists(_slide_path(slide_id, "marp"))
         assert os.path.exists(_slide_path(slide_id, "html"))
-        assert os.path.exists(_slide_path(slide_id, "pptx"))
+        # No pptx artefact is produced; only the tombstone in metadata remains
+        assert not os.path.exists(_slide_path(slide_id, "pptx"))
 
         # Metadata must reflect every format and the migration flag
         updated = json.loads(open(_meta_path(slide_id)).read())
@@ -160,15 +173,25 @@ class TestMigrationUtility:
         assert stats["skipped"] == 0
         assert os.path.exists(_slide_path(good_id, "yaml"))
 
-    def test_legacy_pptx_path_is_preserved_after_migration(self):
-        slide_id = "legacy-pptx"
+    def test_legacy_pptx_tombstone_in_filenames_is_preserved(self):
+        """When legacy metadata still references a ``.pptx`` filename entry
+        (because it predates the PPTX removal), the migration must leave that
+        tombstone alone rather than stripping it. The new YAML/Marp/HTML
+        files coexist with the historical entry."""
+        slide_id = "legacy-pptx-tombstone"
         self._seed_legacy_slide(slide_id)
-        original_pptx_bytes = open(_slide_path(slide_id, "pptx"), "rb").read()
 
         migration_module.migrate_existing_slides()
 
-        # The legacy PPTX file must remain unchanged so existing readers work.
-        assert open(_slide_path(slide_id, "pptx"), "rb").read() == original_pptx_bytes
+        updated = json.loads(open(_meta_path(slide_id)).read())
+        # Tombstone preserved
+        assert updated["filenames"].get("pptx") == f"{slide_id}.pptx"
+        # New formats emitted
+        for fmt in ("yaml", "marp", "html"):
+            assert fmt in updated["filenames"]
+        assert os.path.exists(_slide_path(slide_id, "yaml"))
+        assert os.path.exists(_slide_path(slide_id, "marp"))
+        assert os.path.exists(_slide_path(slide_id, "html"))
 
     def test_yaml_output_includes_placeholder_note(self):
         slide_id = "legacy-yaml"
@@ -208,5 +231,8 @@ class TestMigrationUtility:
         assert stats == {"migrated": 1, "skipped": 0, "errors": 0}
 
         updated = json.loads(open(_meta_path(slide_id)).read())
+        # YAML/Marp/HTML get populated; the legacy pptx tombstone stays.
         for fmt in ("yaml", "marp", "html", "pptx"):
             assert fmt in updated["filenames"]
+        assert os.path.exists(_slide_path(slide_id, "marp"))
+        assert os.path.exists(_slide_path(slide_id, "html"))
