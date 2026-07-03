@@ -308,15 +308,13 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/generate_yaml', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...data,
-                // /api/search surfaces the user-requested key under `key`
-                // (and the song's source key under `original_key`), but the
-                // /api/generate_yaml normalizer reads `target_key`. Forward
-                // the chosen key so the preview doesn't silently fall back
-                // to the converter's C default.
-                target_key: data.key || data.target_key || data.original_key || '',
-            }),
+            // The raw /api/search payload already carries every field
+            // /api/generate_yaml understands (``title``, ``artist``,
+            // ``content``, ``original_key``, plus ``key`` for the
+            // user-requested target). The endpoint's normalizer resolves
+            // target_key with the precedence target_key → key → original_key,
+            // so no field needs to be renamed or forwarded here.
+            body: JSON.stringify(data),
         })
         .then(response => {
             if (!response.ok) {

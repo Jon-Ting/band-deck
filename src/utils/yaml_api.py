@@ -94,7 +94,18 @@ def _song_data_from_request(payload: dict[str, Any]) -> tuple[dict[str, Any], di
                 song_data.get("original_key"),
             ),
             "key": _first_present(chart.get("key"), song_data.get("key")),
-            "target_key": _first_present(payload.get("target_key"), chart.get("target_key"), song_data.get("target_key")),
+            "target_key": _first_present(
+                payload.get("target_key"),
+                chart.get("target_key"),
+                song_data.get("target_key"),
+                payload.get("key"),
+                chart.get("key"),
+                song_data.get("key"),
+                payload.get("original_key"),
+                chart.get("source_key"),
+                chart.get("original_key"),
+                song_data.get("original_key"),
+            ),
         }
     )
 
@@ -134,7 +145,14 @@ def validate_song_yaml_dict(song_yaml: dict[str, Any]) -> dict[str, Any]:
 def generate_yaml_response(payload: dict[str, Any]) -> dict[str, Any]:
     """Convert API request data into serialized YAML data plus validation details."""
     song_data, metadata, chart = _song_data_from_request(payload)
-    song = convert_to_yaml(song_data, target_key=payload.get("target_key") or song_data.get("target_key"))
+    target_key = _first_present(
+        payload.get("target_key"),
+        song_data.get("target_key"),
+        payload.get("key"),
+        song_data.get("key"),
+        song_data.get("original_key"),
+    )
+    song = convert_to_yaml(song_data, target_key=target_key)
 
     authors = _normalize_authors(metadata, song_data)
     source_urls = _normalize_source_urls(metadata, chart, song_data)
