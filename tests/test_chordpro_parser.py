@@ -1,11 +1,17 @@
 """Tests for ChordPro parser module."""
 
+import string
+
+from hypothesis import given, settings, strategies as st
+
 from src.utils.chordpro_parser import (
     ChordPosition,
+    ChordProLine,
     Token,
     TokenType,
     calculate_positions,
     parse_chordpro,
+    reconstruct_brackets,
     tokenize_chordpro,
 )
 
@@ -377,6 +383,105 @@ class TestFormatTwoLineDisplay:
         result = format_two_line_display(line)
 
         assert result == "Just text"
+
+
+class TestRoundTripProperty:
+    """Property-based tests for ChordPro round-trip preservation."""
+
+    # Strategy: valid chord symbols (alphanumeric, #, b, /, m, M, s, u, a, j, 7, 9, etc.)
+    chord_symbol = st.text(
+        alphabet=st.sampled_from(
+            list(string.ascii_uppercase + string.digits + "#b/msuaj79+-()")
+        ),
+        min_size=1,
+        max_size=8,
+    ).filter(lambda s: s[0] in string.ascii_uppercase)
+
+    # Strategy: lyric text without brackets
+    lyric_text = st.text(
+        alphabet=st.characters(
+            blacklist_categories=("Cs",),  # no surrogates
+            blacklist_characters="[]",
+        ),
+        min_size=0,
+        max_size=200,
+    )
+
+    @given(
+        text=lyric_text,
+        chords=st.lists(
+            st.tuples(
+                chord_symbol,
+                st.integers(min_value=0, max_value=200),
+            ),
+            min_size=0,
+            max_size=10,
+        ),
+    )
+    @settings(deadline=None)
+    def test_parse_reconstruct_parse_equivalence(self, text, chords):
+        """Parse → reconstruct → parse produces equivalent ChordProLine.
+
+        Validates Requirement 5.5: round-trip property for all valid data.
+        """
+        # Build chord positions, capping at text length
+        chord_positions = [
+            ChordPosition(chord=chord_sym, position=min(pos, len(text)))
+            for chord_sym, pos in chords
+        ]
+
+        # Sort by position so forward comparison matches parsed order
+        # (reconstruct_brackets sorts internally; stable sort preserves
+        # original ordering of chords at duplicate positions)
+        chord_positions.sort(key=lambda c: c.position)
+
+        original_line = ChordProLine(text=text, chords=chord_positions)
+
+        # Forward: generate valid ChordPro string and parse it
+        chordpro_str = reconstruct_brackets(original_line)
+        parsed_once = parse_chordpro(chordpro_str)
+
+        # Round-trip: reconstruct and parse again
+        reconstructed = reconstruct_brackets(parsed_once)
+        parsed_twice = parse_chordpro(reconstructed)
+
+        # Forward direction: original line should match first parse
+        assert original_line.text == parsed_once.text, (
+            f"Forward text mismatch: '{original_line.text}' vs '{parsed_once.text}'\n"
+            f"ChordPro: {chordpro_str!r}"
+        )
+        assert len(original_line.chords) == len(parsed_once.chords), (
+            f"Forward chord count mismatch: {len(original_line.chords)} vs {len(parsed_once.chords)}\n"
+            f"ChordPro: {chordpro_str!r}"
+        )
+        for i, (orig, parsed) in enumerate(zip(original_line.chords, parsed_once.chords)):
+            assert orig.chord == parsed.chord, (
+                f"Forward chord symbol mismatch at index {i}: '{orig.chord}' vs '{parsed.chord}'\n"
+                f"ChordPro: {chordpro_str!r}"
+            )
+            assert orig.position == parsed.position, (
+                f"Forward chord position mismatch at index {i}: {orig.position} vs {parsed.position}\n"
+                f"ChordPro: {chordpro_str!r}"
+            )
+
+        # Round-trip: parsed_once must equal parsed_twice
+        assert parsed_once.text == parsed_twice.text, (
+            f"Round-trip text mismatch: '{parsed_once.text}' vs '{parsed_twice.text}'\n"
+            f"ChordPro: {chordpro_str!r}\nReconstructed: {reconstructed!r}"
+        )
+        assert len(parsed_once.chords) == len(parsed_twice.chords), (
+            f"Round-trip chord count mismatch: {len(parsed_once.chords)} vs {len(parsed_twice.chords)}\n"
+            f"ChordPro: {chordpro_str!r}\nReconstructed: {reconstructed!r}"
+        )
+        for i, (c1, c2) in enumerate(zip(parsed_once.chords, parsed_twice.chords)):
+            assert c1.chord == c2.chord, (
+                f"Round-trip chord symbol mismatch at index {i}: '{c1.chord}' vs '{c2.chord}'\n"
+                f"ChordPro: {chordpro_str!r}\nReconstructed: {reconstructed!r}"
+            )
+            assert c1.position == c2.position, (
+                f"Round-trip chord position mismatch at index {i}: {c1.position} vs {c2.position}\n"
+                f"ChordPro: {chordpro_str!r}\nReconstructed: {reconstructed!r}"
+            )
 
 
 class TestPrettyPrintChordpro:
