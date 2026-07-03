@@ -4,10 +4,7 @@ from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 import re
-import tempfile
 import logging
-import urllib.parse
-import requests
 
 
 
