@@ -1,6 +1,6 @@
 """Integration tests for the complete song-generation workflow.
 
-Covers end-to-end workflow integration:
+Covers workflow integration:
 - End-to-end: search → parse → YAML → Marp → HTML
 - Edit workflow: modify YAML → regenerate → verify updates propagate
 - Multi-format consistency: YAML/Marp/HTML represent the same song

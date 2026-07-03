@@ -52,7 +52,6 @@ def save_slide(song_data: dict, formats: List[str] | None = None) -> dict:
           (``yaml.safe_dump`` over the SongYAML, ``generate_marp``, and
           ``render_html`` respectively). They were previously placeholder
           files while the Marp pipeline matured.
-        - Metadata structure follows the documented contract.
     """
     if formats is None:
         formats = ["yaml", "marp", "html"]

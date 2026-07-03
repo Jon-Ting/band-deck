@@ -68,8 +68,7 @@ STYLE_PRESETS: dict[str, dict[str, object]] = {
 def _resolve_options(style: str, options: MarpOptions | None) -> MarpOptions:
     """Combine a style preset with any explicit MarpOptions overrides.
 
-    The style preset supplies a baseline configuration
-    (song-map, metadata, practice-notes). Explicit ``options`` field values that differ
+    The style preset supplies a baseline configuration. Explicit ``options`` field values that differ
     from the dataclass defaults (``MarpOptions()``) win so the
     SongEditor can override per song/band. Passing options that happen to
     match a default is treated the same as "no override": callers

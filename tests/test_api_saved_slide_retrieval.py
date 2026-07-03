@@ -1,4 +1,4 @@
-"""Tests for saved slide retrieval endpoints (Task 5.5)."""
+"""Tests for saved slide retrieval endpoints."""
 
 from __future__ import annotations
 

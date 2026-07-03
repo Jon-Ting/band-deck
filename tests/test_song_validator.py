@@ -1,7 +1,7 @@
 """Tests for song validator functionality.
 
-Covers data validation and licensing warnings handled by
-``src.utils.song_validator``.
+Covers data validation, slide overflow estimation, and licensing warnings
+handled by ``src.utils.song_validator``.
 """
 
 import pytest
