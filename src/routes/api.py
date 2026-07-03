@@ -62,12 +62,6 @@ def search_song():
     return jsonify(result)
 
 
-# NOTE: ``/api/download`` (the legacy PowerPoint stream-from-search endpoint)
-# has been removed. The recommended workflow is HTML/Marp via the dedicated
-# per-format endpoints (``/api/download/{format}``) and ``/api/preview``.
-# See docs/MIGRATION.md for the rollout plan and replacement paths.
-
-
 @api_bp.route('/health', methods=['GET'])
 def api_health():
     """Operational health probe (Requirement 9.4).

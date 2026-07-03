@@ -13,7 +13,7 @@ This file tracks significant design decisions made during development of Band-De
 Band-Deck needs reliable sources for songs with both lyrics and chords in a machine-parseable format, across many song genres. Most chord/lyric sites on the internet use inconsistent HTML, require accounts, or both, so the architecture is designed to be extended with additional pluggable scrapers, one at a time, as they become available.
 
 ### Decision
-Design the scraping layer so the app can pull lyrics and chords from any number of public chord/lyric sites on the internet. Ship one default scraper wired into `/api/search` so the rest of the pipeline can be validated end to end. Source registration lives behind a single seam (`src/utils/search.py`), so additional scrapers are added at that boundary without disturbing routes, validate, or slide generation.
+Design the scraping layer so the app can pull lyrics and chords from any number of public chord/lyric sites on the internet. Ship one default scraper registered in `src/utils/search.py` and consumed by the `/api/search` route so the rest of the pipeline can be validated end to end. Source registration lives behind a single seam — `src/utils/search.py` itself — so additional scrapers are added at that boundary without disturbing routes, validate, or slide generation.
 
 ### Rationale
 - A pluggable, multi-source architecture keeps the app usable for as wide a range of songs as possible instead of being locked to a single catalogue; many sources are expected to ship over the app's lifetime.

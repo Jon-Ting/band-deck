@@ -52,7 +52,6 @@
 - **Classes**: `PascalCase`
 - **Functions / variables**: `snake_case`
 - **Constants**: `UPPER_SNAKE_CASE`
-- **PPTX filenames**: generated as `snake_case` from song title (see `to_snake_case()` in `pptx_generator.py`)
 
 ---
 

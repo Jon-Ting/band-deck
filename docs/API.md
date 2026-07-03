@@ -32,16 +32,7 @@ curl "http://localhost:5000/api/search?song=Amazing%20Grace&artist=Traditional&k
   "content": "Verse 1\nG          Em\nI love You Lord\n...",
   "source_url": "https://example.com/songs/amazing-grace-traditional/",
   "original_key": "A",
-  "key": "G",
-  "pptx_preview": {
-    "title": "Amazing Grace",
-    "artist": "Traditional",
-    "key": "G",
-    "sections": [
-      { "header": "Verse 1", "content": "G          Em\nI love You Lord\n..." },
-      { "header": "Chorus", "content": "..." }
-    ]
-  }
+  "key": "G"
 }
 ```
 
@@ -54,34 +45,9 @@ curl "http://localhost:5000/api/search?song=Amazing%20Grace&artist=Traditional&k
 
 ---
 
-### `GET /api/download`
-
-Generate a `.pptx` file for the given song and stream it as an attachment.
-
-**Query Parameters** — same as `/api/search` (`song`, `artist`, `key`).
-
-**Example**
-```bash
-curl -OJ "http://localhost:5000/api/download?song=Amazing%20Grace&artist=Traditional&key=G"
-```
-
-**Success Response** `200 OK` — binary PPTX file stream.
-
-`Content-Disposition: attachment; filename="Amazing Grace - Lyrics and Chords.pptx"`
-
-**Error Responses**
-
-| Status | Body | Cause |
-|--------|------|-------|
-| `400` | `{"error": "Song name is required"}` | Missing `song` param |
-| `404` | `{"error": "Song not found"}` | Song not found |
-| `500` | `{"error": "Failed to generate file"}` | PPTX generation error |
-
----
-
 ### `POST /api/save_slide`
 
-Save a song's data to the local slide library. Generates and stores a `.pptx` + JSON sidecar.
+Save a song in the requested formats (YAML, Marp markdown, HTML, and optionally PDF) plus a JSON metadata sidecar.
 
 **Request Body** — JSON (same shape as the `search` response, without `pptx_preview`):
 ```json
@@ -142,22 +108,9 @@ Returns an empty array `[]` if no slides are saved.
 
 ### `GET /api/saved_slide/<slide_id>`
 
-Download the `.pptx` for a previously saved slide.
+**Stub for the retired unversioned download endpoint.** Returns 404 with an explanatory message pointing callers to the per-format download route (`/api/saved_slide/<id>/download/<format>`).
 
-**Path Parameter**: `slide_id` — UUID returned by `POST /api/save_slide`.
-
-**Example**
-```bash
-curl -OJ "http://localhost:5000/api/saved_slide/550e8400-e29b-41d4-a716-446655440000"
-```
-
-**Success Response** `200 OK` — binary PPTX file stream.
-
-**Error Responses**
-
-| Status | Body | Cause |
-|--------|------|-------|
-| `404` | `{"error": "Slide not found"}` | Unknown `slide_id` |
+The original route defaulted to PowerPoint; PowerPoint export is now retired, so the stub is the live behaviour of this URL.
 
 ---
 
@@ -185,29 +138,13 @@ curl -X DELETE "http://localhost:5000/api/saved_slide/550e8400-e29b-41d4-a716-44
 
 ### `GET /api/compile_slides`
 
-Compile all saved slides into a single `.pptx` with a clickable index slide at the front. Songs are sorted alphabetically by title.
-
-**Example**
-```bash
-curl -OJ "http://localhost:5000/api/compile_slides"
-```
-
-**Success Response** `200 OK` — binary PPTX file stream.
-
-`Content-Disposition: attachment; filename="All_Slides_Compiled.pptx"`
-
-**Error Responses**
-
-| Status | Body | Cause |
-|--------|------|-------|
-| `500` | `{"error": "No slides to compile."}` | Library is empty |
-| `500` | `{"error": "<message>"}` | Unexpected error during compilation |
+**Removed.** This endpoint used to compile all saved slides into a single `.pptx` with a clickable index slide; PowerPoint export has been retired. The replacement is `POST /api/compile`, which assembles a single HTML deck with a clickable index for the supplied list of slide IDs.
 
 ---
 
 ### `POST /api/clear_temp_files`
 
-Delete all non-`.pptx` / non-`.json` files from `data/saved_slides/`. This is safe to run at any time; it will never delete saved slides or compiled decks.
+Delete every file in `data/saved_slides/` that is not part of the saved-slide artefact set (i.e. anything other than `.yaml`, `.marp.md`, `.html`, `.json`, and any opt-in `.pdf`). This is safe to run at any time; it will never delete a saved slide or a compiled deck.
 
 **Example**
 ```bash

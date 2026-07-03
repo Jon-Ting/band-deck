@@ -8,17 +8,17 @@ Band-Deck has no database. All state is stored as files on disk in `data/saved_s
 
 ## Song Data Dict
 
-This is the central in-memory data structure passed between `search.py`, `yaml_converter.py`, `marp_generator.py`, `html_renderer.py`, `slide_storage.py`, and the API layer.
+This is the central in-memory data structure passed between the registered scraper in `src/utils/search.py`, `yaml_converter.py`, `marp_generator.py`, `html_renderer.py`, `slide_storage.py`, and the API layer.
 
 ```python
 {
-    # Populated by search.py
+    # Populated by the registered scraper
     "title":        str,          # Song title scraped from the page <h1>
     "search_name":  str,          # User's original search input (shown on slides)
     "artist":       str,          # Artist name (from search input, not scraped)
     "content":      str,          # Sectioned lyrics+chords (see Content Format below)
     "source_url":   str,          # Canonical URL of the scraped source page
-    "original_key": str | None,   # Key detected from page meta tag / source-specific hooks
+    "original_key": str | None,   # Key detected by the active scraper; per-source convention varies
 
     # Added by the API layer (api.py)
     "key":          str | None,   # User-requested target key (post-transposition)
@@ -109,7 +109,7 @@ data/saved_slides/
 
 ## Section Types
 
-The following section names are recognized and parsed by `search.py`:
+The following section names are recognized and parsed by the registered scraper:
 
 | Name | Numbered? | Notes |
 |------|-----------|-------|
@@ -131,7 +131,7 @@ The following section names are recognized and parsed by `search.py`:
 
 ## Chromatic Scale Constants
 
-Used by the transposition engine in `search.py`:
+Used by the transposition engine in `src/utils/search.py` (shared across the registered scrapers):
 
 ```python
 CHROMATIC_SCALE_SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']

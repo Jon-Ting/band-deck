@@ -24,7 +24,8 @@ Tests live in `tests/` and follow the `test_*.py` naming convention so pytest di
 
 ```
 tests/
-└── test_search.py    ← Tests for src/utils/search.py and src/utils/pptx_generator.py
+├── test_search.py        ← Tests for the registered scraper helpers in src/utils/search.py
+└── test_yaml_converter.py ← Tests for src/utils/yaml_converter.py
 ```
 
 ---
@@ -35,13 +36,13 @@ tests/
 
 | Test | What it covers |
 |------|---------------|
-| `test_url_formatting` | `format_worship_together_url()` — slug generation for various song/artist inputs including numbers and special characters |
+| `test_url_formatting` | `format_worship_together_url()` — per-source URL slug generation for the default scraper; new sources ship their own |
 | `test_successful_song_search` | `search_song()` happy path with a mocked 200 response |
 | `test_failed_song_search` | `search_song()` returns `None` on a network error (`RequestException`) |
 | `test_missing_elements` | `search_song()` returns `None` when the page lacks expected HTML structure |
-| `test_lyrics_extraction` | `search_song()` correctly extracts and structures sections from source HTML (the current bootstrap source's chord-pro-line format) |
+| `test_lyrics_extraction` | `search_song()` correctly extracts and structures sections from the default scraper's source HTML |
 
-> The `format_worship_together_url` helper name is preserved for now because it describes the current bootstrap source's URL pattern. New scrapers are expected to ship their own per-source slug helpers.
+> The `format_worship_together_url()` helper is retained today because it ships as the default scraper's per-source URL slug builder. New scrapers register their own per-source slug helper alongside it in `src/utils/search.py`. Once a second scraper is wired in, helper names will move behind per-source adapters.
 
 ---
 
@@ -78,12 +79,13 @@ Chord transposition has many edge cases. When adding transposition tests, includ
 
 ## What to Test When Adding New Features
 
-### New Song Source (new scraper)
+### New Scraper (new song source)
 - URL/slug generation for the new source
 - Successful parse of the expected HTML structure
 - Graceful failure (returns `None`) when the response is malformed
 - Section grouping correctness (sections are named correctly, lines are in the right order)
 - Chord transposition still works through the new source's data
+- The new scraper is registered alongside the default in `src/utils/search.py`
 
 ### New API Endpoint
 Use Flask's test client:
@@ -108,11 +110,11 @@ class TestMyEndpoint(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 ```
 
-### PPTX Generation
-- Generated file is a valid `.pptx` (can be opened with `python-pptx.Presentation(path)`)
-- Slide dimensions are correct (10 × 5.625 inches)
-- Title text matches `search_name` or `title`
-- Content is non-empty
+### Slide Generation (yaml → marp → html)
+When `search_song()` produces a chart, the live preview and downloaded deck both flow through `src/utils/yaml_converter.py → src/utils/marp_generator.py → src/utils/html_renderer.py`. Cover at least:
+- Converted `SongYAML` round-trips through `convert_to_yaml()`; section names, types, and `arrangement` ordering preserved (`tests/test_yaml_converter.py`)
+- Transposition preserve lyric text and chord positions across the chromatic scale (`tests/test_yaml_converter.py::TestTranspositionProperties`)
+- The default scraper + any new scraper both feed the same dict shape into the YAML pipeline
 
 ---
 

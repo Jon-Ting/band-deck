@@ -1,13 +1,20 @@
 # Band-Deck 5-Phase Migration Guide
 
-This document captures the rollout strategy for moving Band-Deck from a
+This document captures the rollout strategy that moved Band-Deck from a
 PowerPoint-only pipeline to an HTML/Marp slide deck generator while
-maintaining backward compatibility with the existing PPTX workflow.
+maintaining backward compatibility with the existing PPTX workflow for
+the duration of the rollout.
 
-The migration is staged so each phase ships behind feature flags, retains
-the old behaviour, and adds the new capability alongside it. After
-Phase 5, PPTX becomes a legacy export; HTML is the recommended primary
-format.
+The migration was staged so each phase shipped behind feature flags,
+retained the existing behaviour, and added the new capability alongside
+it. After Phase 5, PPTX export was retired and HTML became the
+recommended primary format.
+
+> **Status (live today):** all five phases have shipped. The legacy
+> `/api/download` route and the frontend `<option value="pptx">`
+> selector were removed alongside the PPTX emitter. Per-format output
+> now flows through `/api/saved_slide/<id>/download/<format>` (`HTML`,
+> `Marp`, `YAML`, and `PDF` where the renderer emits one).
 
 ---
 
@@ -23,10 +30,12 @@ format.
 - Marp markdown generator (`src/utils/marp_generator.py`).
 - HTML renderer wrapping the Marp CLI (`src/utils/html_renderer.py`).
 
-**What does NOT change:**
-- `/api/search` still returns the legacy search payload.
-- `/api/download` still serves a `.pptx`.
-- `slide_storage.py` keeps using the same on-disk layout.
+**What did NOT change during Phase 1:**
+- `/api/search` still returned the legacy search payload.
+- `/api/download` still served a `.pptx` (route removed in Phase 5).
+- `slide_storage.py` kept the same UUID-based on-disk layout (later
+  extended to YAML/Marp/HTML/PDF in Phase 3 and relocated to
+  `data/saved_slides/` in Phase 5).
 
 ---
 
@@ -38,7 +47,9 @@ format.
 - `/api/generate_yaml`, `/api/preview`, `/api/regenerate`.
 - Frontend `SlidePreview` and `SongEditor` classes
   (`src/static/js/slide_preview.js`, `src/static/js/song_editor.js`).
-- Multi-format download endpoint register (HTML/Marp/YAML/PDF/PPTX).
+- Multi-format download endpoint register
+  (`HTML/Marp/YAML/PDF`; `PPTX` was carried through Phases 2–4 and
+  retired in Phase 5).
 
 **Operational note:** the Marp CLI must be installed
 (`npm install -g @marp-team/marp-cli`) before the preview endpoint
@@ -48,8 +59,9 @@ returns a rendered HTML deck. See [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## Phase 3: Storage Migration
 
-**Goal:** persist every saved slide in YAML + Marp + HTML in addition to
-the original PPTX file.
+**Goal:** persist every saved slide in YAML + Marp + HTML in addition
+to the original PPTX file. The PPTX artefact was phased out in Phase 5;
+new saves default to YAML + Marp + HTML.
 
 **Shipped:**
 - Multi-format persistence (`slide_storage.update_slide`,
@@ -57,7 +69,8 @@ the original PPTX file.
 - New `/api/saved_slide/<id>/download/<format>` endpoint.
 - Batch migration utility (`src/utils/migration.py`) that walks the
   existing saved slides and generates the new formats. The legacy PPTX
-  is preserved.
+  artefacts were preserved during the rollout and retired alongside
+  Phase 5.
 - HTML batch compilation (`src/utils/compiler.py`,
   `/api/compile`).
 
@@ -129,23 +142,25 @@ Pass `check_placeholders=true` to additionally flag
 
 **Goal:** phase out PPTX generation in favour of HTML.
 
-**Status:** PPTX remains available, with explicit deprecation signals:
+**Status (achieved):** PPTX export has been retired. The legacy
+`/api/download` route no longer exists; the frontend `<option
+value="pptx">` selector was removed; per-format output now flows
+through `/api/saved_slide/<id>/download/<format>` (`HTML`, `Marp`,
+`YAML`, `PDF` where the renderer emits one).
 
-- `/api/download` now emits:
-  - `Deprecation: true`
-  - `Sunset: 2027-07-03`
-  - `Link: </api/download/html>; rel="successor-version"; ...`
-  - `X-Band-Deck-Deprecation-Notice: PPTX export is legacy; HTML is the recommended format.`
+**Recorded deprecation mechanism** (planned for a shadow-period
+emission on the legacy route — never shipped, because the route was
+removed before the rollout window opened):
 
-- The frontend `<option value="pptx">` carries an explanatory `title`
-  attribute and the user guide recommends HTML.
+- `Deprecation: true`, `Sunset: …`, `Link:`, and the
+  `X-Band-Deck-Deprecation-Notice` HTTP headers were planned.
+- A frontend `<option value="pptx">` tooltip was planned.
 
-**Operator actions:**
-- Monitor traffic on `/api/download` (still accepted until the Sunset
-  date). Drop the route once zero unique callers remain for one billing
-  cycle.
-- Encourage users via the in-app notice and the user guide to
-  re-download saved slides as HTML.
+**Operator actions remaining:** none. PPTX content in
+`data/saved_slides/` should be cleared via the UI cleanup action;
+saved slides that lack a YAML/Marp/HTML artefact surface a
+"format not available" error from the per-format download routes
+until they are regenerated.
 
 ---
 
