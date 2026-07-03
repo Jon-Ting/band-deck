@@ -163,7 +163,7 @@ def generate_yaml_response(payload: dict[str, Any]) -> dict[str, Any]:
         song.source_urls = source_urls
 
     for field_name in (
-        "ccli_number",
+        "license_number",
         "copyright",
         "original_key",
         "bpm",
@@ -171,6 +171,8 @@ def generate_yaml_response(payload: dict[str, Any]) -> dict[str, Any]:
         "capo",
     ):
         value = _first_present(metadata.get(field_name), song_data.get(field_name))
+        if field_name == "license_number" and value is None:
+            value = _first_present(metadata.get("ccli_number"), song_data.get("ccli_number"))
         if value is not None:
             setattr(song, field_name, value)
 

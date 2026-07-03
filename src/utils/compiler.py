@@ -85,7 +85,7 @@ def _load_song_yaml(slide_id: str) -> SongYAML:
     return SongYAML(
         title=str(raw.get("title") or "Unknown Title"),
         authors=list(raw.get("authors") or ["Unknown"]),
-        ccli_number=raw.get("ccli_number"),
+        license_number=raw.get("license_number") or raw.get("ccli_number"),
         copyright=raw.get("copyright"),
         original_key=raw.get("original_key"),
         target_key=str(raw.get("target_key") or "C"),

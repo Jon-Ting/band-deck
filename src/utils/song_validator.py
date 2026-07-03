@@ -288,12 +288,12 @@ def _generate_overflow_suggestion(
 
 
 def check_licensing(song: SongYAML) -> list[str]:
-    """Return copyright/CCLI warnings if information incomplete.
+    """Return licensing warnings if information incomplete.
 
     Checks for:
-    - Missing CCLI number
+    - Missing license number
     - Incomplete copyright information
-    - CCLI permission reminder
+    - License permission reminder
 
     Args:
         song: The SongYAML to check
@@ -305,12 +305,12 @@ def check_licensing(song: SongYAML) -> list[str]:
 
     logger.debug(f"Checking licensing for song: {song.title}")
 
-    # Missing CCLI number warning
-    if not song.ccli_number or not song.ccli_number.strip():
+    # Missing license number warning
+    if not song.license_number or not song.license_number.strip():
         warnings.append(
-            "CCLI number is missing. Please verify licensing information before use."
+            "License number is missing. Please verify licensing information before use."
         )
-        logger.info("Missing CCLI number")
+        logger.info("Missing license number")
 
     # Incomplete copyright warning
     if not song.copyright or not song.copyright.strip():
@@ -319,9 +319,9 @@ def check_licensing(song: SongYAML) -> list[str]:
         )
         logger.info("Missing copyright information")
 
-    # CCLI permission reminder (always included)
+    # Permission reminder (always included)
     warnings.append(
-        "Reminder: Please verify that your church has CCLI permission and reporting for this song before use."
+        "Reminder: Please verify that you have permission to use this song before use."
     )
 
     return warnings

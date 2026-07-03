@@ -58,7 +58,7 @@ def _build_placeholder_song(meta: dict[str, Any]) -> SongYAML:
     return SongYAML(
         title=(meta.get("title") or "Unknown Title").strip(),
         authors=[artist] if artist else ["Unknown"],
-        ccli_number=meta.get("ccli_number"),
+        license_number=meta.get("license_number") or meta.get("ccli_number"),
         original_key=key if meta.get("key") else None,
         target_key=key,
         bpm=meta.get("bpm"),

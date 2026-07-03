@@ -27,7 +27,7 @@ F       C       G       C
 Ending of the chorus""",
     "bpm": 120,
     "time_signature": "4/4",
-    "ccli_number": "1234567",
+    "license_number": "1234567",
 }
 
 
@@ -65,7 +65,7 @@ def _modified_song_payload() -> dict:
         "arrangement": ["Verse 1", "Chorus"],
         "bpm": 140,
         "time_signature": "3/4",
-        "ccli_number": "7654321",
+        "license_number": "7654321",
     }
 
 
@@ -90,7 +90,7 @@ def test_update_slide_basic(saved_slide):
     assert updated_meta["key"] == "D"
     assert updated_meta["bpm"] == 140
     assert updated_meta["time_signature"] == "3/4"
-    assert updated_meta["ccli_number"] == "7654321"
+    assert updated_meta["license_number"] == "7654321"
     assert updated_meta["created_at"] == saved_slide["created_at"]  # Preserved
     assert updated_meta["updated_at"] != saved_slide["updated_at"]  # Changed
 
@@ -298,7 +298,7 @@ class TestUpdateSlideEndpoint:
         assert body["title"] == "Updated Song Title"
         assert body["key"] == "D"
         assert body["bpm"] == 140
-        assert body["ccli_number"] == "7654321"
+        assert body["license_number"] == "7654321"
         # created_at is preserved; updated_at advances
         assert body["created_at"] == meta["created_at"]
         assert body["updated_at"] != meta["updated_at"]

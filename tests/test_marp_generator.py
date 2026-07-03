@@ -11,7 +11,7 @@ def make_song() -> SongYAML:
     return SongYAML(
         title="Example Song",
         authors=["Example Writer", "Second Writer"],
-        ccli_number="1234567",
+        license_number="1234567",
         copyright="Copyright 2026 Example Publisher",
         original_key="G",
         target_key="D",
@@ -64,7 +64,7 @@ def test_generate_marp_includes_frontmatter_css_and_title_slide_metadata():
     assert ".cue-box" in result
     assert "# Example Song" in result
     assert "Example Writer, Second Writer" in result
-    assert "CCLI: 1234567" in result
+    assert "License: 1234567" in result
     assert "Copyright 2026 Example Publisher" in result
     assert "Key: D" in result
     assert "BPM: 74" in result
@@ -104,18 +104,18 @@ class TestTitleSlideStructure:
         assert "# Example Song" in result
         assert "Example Writer, Second Writer" in result
 
-    def test_title_slide_contains_ccli_when_present(self):
+    def test_title_slide_contains_license_when_present(self):
         song = make_song()
         result = generate_marp(song)
 
-        assert "CCLI: 1234567" in result
+        assert "License: 1234567" in result
 
-    def test_title_slide_omits_ccli_when_missing(self):
+    def test_title_slide_omits_license_when_missing(self):
         song = make_song()
-        song.ccli_number = None
+        song.license_number = None
         result = generate_marp(song)
 
-        assert "CCLI:" not in result
+        assert "License:" not in result
 
     def test_title_slide_contains_copyright_when_present(self):
         song = make_song()

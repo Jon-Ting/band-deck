@@ -64,7 +64,7 @@ class TestMigrationUtility:
             "updated_at": "2024-01-01T00:00:00+00:00",
             "bpm": 80,
             "time_signature": "3/4",
-            "ccli_number": "1234567",
+            "license_number": "1234567",
         }
         meta.update(overrides)
         _write_meta(slide_id, meta)

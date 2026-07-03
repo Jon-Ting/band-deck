@@ -40,7 +40,7 @@ def test_generate_yaml_converts_metadata_chart_and_target_key():
     assert result["validation"] == {"valid": True, "errors": []}
     assert result["yaml"]["title"] == "Requested Title"
     assert result["yaml"]["authors"] == ["Writer One", "Writer Two"]
-    assert result["yaml"]["ccli_number"] == "1234567"
+    assert result["yaml"]["license_number"] == "1234567"
     assert result["yaml"]["copyright"] == "Copyright 2026 Example Publisher"
     assert result["yaml"]["original_key"] == "G"
     assert result["yaml"]["target_key"] == "G"

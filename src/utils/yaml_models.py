@@ -18,7 +18,7 @@ class SongMetadata:
 
     title: str
     authors: list[str]
-    ccli_number: str | None = None
+    license_number: str | None = None
     copyright: str | None = None
     original_key: str | None = None
     bpm: int | None = None
@@ -47,7 +47,7 @@ class SongYAML:
 
     title: str
     authors: list[str]
-    ccli_number: str | None = None
+    license_number: str | None = None
     copyright: str | None = None
     original_key: str | None = None
     target_key: str = "C"

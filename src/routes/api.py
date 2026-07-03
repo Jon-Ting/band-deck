@@ -271,7 +271,7 @@ def _song_from_api_payload(song_payload: dict) -> SongYAML:
     return SongYAML(
         title=str(song_payload.get('title') or ''),
         authors=authors or ['Unknown'],
-        ccli_number=song_payload.get('ccli_number'),
+        license_number=song_payload.get('license_number') or song_payload.get('ccli_number'),
         copyright=song_payload.get('copyright'),
         original_key=song_payload.get('original_key'),
         target_key=str(song_payload.get('target_key') or 'C'),

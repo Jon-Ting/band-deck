@@ -44,7 +44,7 @@ def save_slide(song_data: dict, formats: List[str] | None = None) -> dict:
             'updated_at': str,  # ISO 8601 UTC timestamp
             'bpm': int | None,  # Optional
             'time_signature': str | None,  # Optional
-            'ccli_number': str | None  # Optional
+            'license_number': str | None  # Optional
         }
 
     Note:
@@ -100,8 +100,10 @@ def save_slide(song_data: dict, formats: List[str] | None = None) -> dict:
         meta["bpm"] = song_data["bpm"]
     if "time_signature" in song_data:
         meta["time_signature"] = song_data["time_signature"]
-    if "ccli_number" in song_data:
-        meta["ccli_number"] = song_data["ccli_number"]
+    if "license_number" in song_data:
+        meta["license_number"] = song_data["license_number"]
+    elif "ccli_number" in song_data:
+        meta["license_number"] = song_data["ccli_number"]
 
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
@@ -265,8 +267,8 @@ def update_slide(slide_id: str, request_data: dict) -> dict:
         meta["bpm"] = song.bpm
     if song.time_signature:
         meta["time_signature"] = song.time_signature
-    if song.ccli_number:
-        meta["ccli_number"] = song.ccli_number
+    if song.license_number:
+        meta["license_number"] = song.license_number
 
     # Save updated metadata
     meta_path = _meta_path(slide_id)

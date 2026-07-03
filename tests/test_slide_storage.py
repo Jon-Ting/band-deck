@@ -74,7 +74,7 @@ class TestSlideStorage:
         assert meta["key"] == "G"
         assert meta["bpm"] == 80
         assert meta["time_signature"] == "3/4"
-        assert meta["ccli_number"] == "1234567"
+        assert meta["license_number"] == "1234567"
 
         # Verify filenames dict now uses the supported formats and never
         # includes the legacy PPTX format.
@@ -352,14 +352,14 @@ class TestSlideStorage:
             "key": "G",
             "bpm": 120,
             "time_signature": "4/4",
-            "ccli_number": "9999999",
+            "license_number": "9999999",
         }
 
         meta = save_slide(song_data, formats=["yaml"])
 
         assert meta["bpm"] == 120
         assert meta["time_signature"] == "4/4"
-        assert meta["ccli_number"] == "9999999"
+        assert meta["license_number"] == "9999999"
 
     def test_optional_metadata_fields_omitted_when_absent(self):
         """Test that optional fields are not included when absent from song_data."""
@@ -369,7 +369,7 @@ class TestSlideStorage:
 
         assert "bpm" not in meta
         assert "time_signature" not in meta
-        assert "ccli_number" not in meta
+        assert "license_number" not in meta
 
     def test_timestamps_are_iso8601_utc_format(self):
         """Test that timestamps follow ISO 8601 UTC format."""

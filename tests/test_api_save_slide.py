@@ -27,7 +27,7 @@ def make_song_data() -> dict:
         "key": "G",
         "bpm": 80,
         "time_signature": "3/4",
-        "ccli_number": "12345",
+        "license_number": "12345",
         "content": "Amazing grace, how sweet the sound",
     }
 
@@ -224,7 +224,7 @@ class TestSaveSlideEndpoint:
         # Optional fields from song_data should be in response
         assert result["bpm"] == 80
         assert result["time_signature"] == "3/4"
-        assert result["ccli_number"] == "12345"
+        assert result["license_number"] == "12345"
 
     def test_save_slide_explicit_user_action_required(self):
         """

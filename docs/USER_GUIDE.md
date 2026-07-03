@@ -59,7 +59,7 @@ This tool is intended for **personal study, educational, and live-performance us
 
 By using this application you acknowledge that:
 
-- Generated slides may be subject to copyright. You are responsible for ensuring appropriate licensing (e.g. **CCLI** for worship use, or **ASCAP / BMI / SESAC** for general public performance) before projection or distribution.
+- Generated slides may be subject to copyright. You are responsible for ensuring appropriate licensing (e.g. **CCLI**, **ASCAP / BMI / SESAC**, etc.) before projection or distribution.
 - Acceptable use includes (but is not limited to) worship services, concerts, rehearsals, and lessons.
 - Rate limiting is currently disabled; avoid bulk scraping and follow source-site terms.
 - This project ships with template/sample songs only — please verify each song's licensing status for your jurisdiction and use case.

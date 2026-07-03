@@ -130,8 +130,8 @@ arrangement panel, or pass `style=` to `/api/regenerate`,
 - `warnings` — missing authors, missing target key, etc.
 - `overflow` — sections that may not fit on a single slide for the
   chosen style, each with a split/reduce suggestion.
-- `licensing_warnings` — CCLI / copyright / permission reminders,
-  always including the unconditional "verify CCLI permission" message.
+- `licensing_warnings` — license / copyright / permission reminders,
+  always including the unconditional "verify permission" message.
 
 Pass `check_placeholders=true` to additionally flag
 `TODO` / `TBD` / `XXX` / `[placeholder]` / `{value}` markers.

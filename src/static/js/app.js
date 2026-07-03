@@ -499,8 +499,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 yaml += `  - ${author}\n`;
             });
         }
-        if (songData.ccli_number) {
-            yaml += `ccli_number: ${songData.ccli_number}\n`;
+        if (songData.license_number) {
+            yaml += `license_number: ${songData.license_number}\n`;
+        } else if (songData.ccli_number) {
+            yaml += `license_number: ${songData.ccli_number}\n`;
         }
         if (songData.copyright) {
             yaml += `copyright: "${songData.copyright}"\n`;
@@ -551,8 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return yaml;
-    }    // PPTX export has been removed from the application; see docs/MIGRATION.md
-    // for the rationale and the recommended HTML fallback workflow.
+    }
     
     // Function to show error message
     function showError(message) {
@@ -588,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // The "Download All" PowerPoint button was removed when PPTX export was
     // deprecated; multi-slide decks are now produced through the HTML compile
-    // pipeline (/api/compile, see docs/MIGRATION.md).
+    // pipeline (/api/compile).
 
     // Load and render saved slides
     function loadSavedSlides() {

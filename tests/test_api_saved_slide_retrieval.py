@@ -26,7 +26,7 @@ def make_song_data() -> dict:
         "key": "G",
         "bpm": 80,
         "time_signature": "3/4",
-        "ccli_number": "12345",
+        "license_number": "12345",
         "content": "Amazing grace, how sweet the sound",
     }
 

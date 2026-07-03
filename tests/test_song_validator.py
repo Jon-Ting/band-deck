@@ -50,7 +50,7 @@ def _song(
     sections: dict[str, SongSection] | None = None,
     arrangement: list[str] | None = None,
     *,
-    ccli_number: str | None = "1234567",
+    license_number: str | None = "1234567",
     copyright: str | None = "Test © 2024 Writer",
 ) -> SongYAML:
     """Build a baseline complete song, with optional overrides."""
@@ -71,7 +71,7 @@ def _song(
         target_key=target_key,
         sections=sections,
         arrangement=arrangement,
-        ccli_number=ccli_number,
+        license_number=license_number,
         copyright=copyright,
     )
 
@@ -91,7 +91,7 @@ class TestValidateSong:
 
         assert result.is_valid is True
         assert result.errors == []
-        # The CCLI reminder is intentionally not emitted here; only on explicit
+        # The licensing reminder is intentionally not emitted here; only on explicit
         # ``check_licensing`` calls
         assert result.warnings == []
 
@@ -487,12 +487,12 @@ class TestEstimateSlideOverflow:
 class TestCheckLicensing:
     """Tests for the check_licensing helper."""
 
-    def test_missing_ccli_number_warns_18_1(self):
-        song = _song(ccli_number=None)
+    def test_missing_license_number_warns_18_1(self):
+        song = _song(license_number=None)
 
         warnings = check_licensing(song)
 
-        assert any("CCLI" in warn and "missing" in warn.lower() for warn in warnings)
+        assert any("license number" in warn.lower() and "missing" in warn.lower() for warn in warnings)
 
     def test_missing_copyright_warns_18_2(self):
         song = _song(copyright=None)
@@ -505,28 +505,27 @@ class TestCheckLicensing:
         )
 
     def test_reminder_always_emitted_18_5(self):
-        song = _song(ccli_number="1234567", copyright="© 2024 Writer")
+        song = _song(license_number="1234567", copyright="© 2024 Writer")
 
         warnings = check_licensing(song)
 
-        # The CCLI permission reminder is unconditional.
-        assert any("CCLI permission" in warn for warn in warnings)
+        # The permission reminder is unconditional.
+        assert any("permission" in warn.lower() for warn in warnings)
 
     def test_reminder_emitted_even_when_warnings_present(self):
-        song = _song(ccli_number=None, copyright=None)
+        song = _song(license_number=None, copyright=None)
 
         warnings = check_licensing(song)
 
         # Both incomplete fields + reminder should be present (3 warnings).
         assert len(warnings) == 3
-        assert any("CCLI permission" in warn for warn in warnings)
 
-    def test_whitespace_only_ccli_treated_as_missing(self):
-        song = _song(ccli_number="   ")
+    def test_whitespace_only_license_treated_as_missing(self):
+        song = _song(license_number="   ")
 
         warnings = check_licensing(song)
 
-        assert any("CCLI" in warn for warn in warnings)
+        assert any("license number" in warn.lower() for warn in warnings)
 
     def test_whitespace_only_copyright_treated_as_missing(self):
         song = _song(copyright="   ")

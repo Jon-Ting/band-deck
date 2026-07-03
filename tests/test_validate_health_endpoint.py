@@ -38,7 +38,7 @@ def _complete_song_payload() -> dict:
             }
         },
         "arrangement": ["Verse 1"],
-        "ccli_number": "1234567",
+        "license_number": "1234567",
         "copyright": "© 2024",
     }
 
@@ -66,8 +66,8 @@ class TestValidateEndpoint:
         assert payload["errors"] == [], (
             f"Expected complete song to pass validation; got {payload['errors']}"
         )
-        # The CCLI permission reminder is always emitted.
-        assert any("CCLI permission" in w for w in payload["licensing_warnings"])
+        # The license permission reminder is always emitted.
+        assert any("permission" in w for w in payload["licensing_warnings"])
 
     def test_validate_reports_invalid_chord(self):
         client = make_client().test_client()

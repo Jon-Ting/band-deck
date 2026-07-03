@@ -132,7 +132,7 @@ def _song_from_payload(payload: dict[str, Any]) -> SongYAML:
     return SongYAML(
         title=title,
         authors=authors,
-        ccli_number=_optional_string(merged_song.get("ccli_number")),
+        license_number=_optional_string(merged_song.get("license_number")) or _optional_string(merged_song.get("ccli_number")),
         copyright=_optional_string(merged_song.get("copyright")),
         original_key=_optional_string(merged_song.get("original_key")),
         target_key=str(merged_song.get("target_key") or "C"),

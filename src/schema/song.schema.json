@@ -27,12 +27,12 @@
       "minItems": 1,
       "description": "List of song authors/composers"
     },
-    "ccli_number": {
+    "license_number": {
       "type": [
         "string",
         "null"
       ],
-      "description": "CCLI number, if available"
+      "description": "License identifier (e.g. CCLI, ISRC, BMI/ASCAP work ID), if available"
     },
     "copyright": {
       "type": [

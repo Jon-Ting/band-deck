@@ -41,7 +41,7 @@ def test_convert_to_yaml_preserves_metadata_and_prefers_search_name():
     assert result.original_key == "G"
     assert result.target_key == "D"
     assert result.source_urls == ["https://example.com/songs/example/"]
-    assert result.ccli_number is None
+    assert result.license_number is None
     assert result.copyright is None
     assert result.bpm is None
     assert result.time_signature is None

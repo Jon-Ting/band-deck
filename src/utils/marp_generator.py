@@ -198,8 +198,8 @@ def _generate_title_slide(
 
     parts.append(f"**Authors:** {_escape(_authors(song))}  ")
 
-    if song.ccli_number:
-        parts.append(f"**CCLI: {_escape(song.ccli_number)}**  ")
+    if song.license_number:
+        parts.append(f"**License: {_escape(song.license_number)}**  ")
 
     if options.show_song_map and song.arrangement:
         parts.append(f"**Song map:** {_render_song_map(song.arrangement)}")

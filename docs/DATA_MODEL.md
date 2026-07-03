@@ -80,7 +80,7 @@ Each saved slide has a UUID-named JSON sidecar in `data/saved_slides/`.
     "updated_at":   str,                       # ISO 8601 UTC
     "bpm":          int | None,                # Optional
     "time_signature": str | None,              # Optional
-    "ccli_number":  str | None,                # Optional
+    "license_number":  str | None,                # Optional
 }
 ```
 
