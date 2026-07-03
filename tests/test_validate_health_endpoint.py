@@ -44,7 +44,7 @@ def _complete_song_payload() -> dict:
 
 
 class TestValidateEndpoint:
-    """Focused tests for /api/validate (Requirement 7.6)."""
+    """Focused tests for /api/validate"""
 
     def test_validate_happy_path_returns_structured_result(self):
         client = make_client().test_client()
@@ -152,7 +152,7 @@ class TestValidateEndpoint:
 
 
 class TestHealthEndpoint:
-    """Focused tests for /api/health (Requirement 9.4)."""
+    """Focused tests for /api/health"""
 
     def test_health_returns_status_and_storage_payload(self, monkeypatch):
         # Force Marp to look "available" so the endpoint says ok.

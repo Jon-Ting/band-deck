@@ -52,11 +52,11 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
     """Validate song data completeness, chord symbols, arrangement references.
 
     Checks:
-    - All arrangement items reference existing sections (Requirement 7.1)
-    - All chord symbols are valid (Requirement 7.2)
-    - All sections have clear labels (Requirement 7.4)
-    - Metadata fields are complete (Requirement 7.5)
-    - Optional placeholder text detection (Requirement 7.7)
+    - All arrangement items reference existing sections
+    - All chord symbols are valid
+    - All sections have clear labels
+    - Metadata fields are complete
+    - Optional placeholder text detection
 
     Args:
         song: The SongYAML to validate
@@ -70,7 +70,7 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
 
     logger.debug(f"Validating song: {song.title}")
 
-    # Requirement 7.1: Verify all arrangement items reference existing sections
+    # Verify all arrangement items reference existing sections
     for arrangement_item in song.arrangement:
         if arrangement_item not in song.sections:
             errors.append(
@@ -78,7 +78,7 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
             )
             logger.warning(f"Invalid arrangement reference: {arrangement_item}")
 
-    # Requirement 7.2: Verify all chord symbols are valid
+    # Verify all chord symbols are valid
     for section_name, section in song.sections.items():
         for line_idx, line in enumerate(section.lines):
             for chord_pos in line.chords:
@@ -90,7 +90,7 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
                         f"Invalid chord: {chord_pos.chord} in {section_name}"
                     )
 
-    # Requirement 7.4: Verify all sections have clear labels
+    # Verify all sections have clear labels
     for section_name, section in song.sections.items():
         if not section_name or not section_name.strip():
             errors.append(f"Section has empty or missing label: {section}")
@@ -102,7 +102,7 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
             )
             logger.warning(f"Section {section_name} has empty name property")
 
-    # Requirement 7.5: Verify metadata fields are complete
+    # Verify metadata fields are complete
     if not song.title or not song.title.strip():
         errors.append("Song title is missing or empty")
         logger.warning("Missing song title")
@@ -115,7 +115,7 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
         warnings.append("Target key is missing or empty")
         logger.info("Missing target key")
 
-    # Requirement 7.7: Optional placeholder text checking
+    # Optional placeholder text checking
     if check_placeholders:
         placeholder_issues = check_for_placeholders(song)
         if placeholder_issues:
@@ -291,9 +291,9 @@ def check_licensing(song: SongYAML) -> list[str]:
     """Return copyright/CCLI warnings if information incomplete.
 
     Checks for:
-    - Missing CCLI number (Requirement 18.1)
-    - Incomplete copyright information (Requirement 18.2)
-    - CCLI permission reminder (Requirement 18.5)
+    - Missing CCLI number
+    - Incomplete copyright information
+    - CCLI permission reminder
 
     Args:
         song: The SongYAML to check
@@ -305,21 +305,21 @@ def check_licensing(song: SongYAML) -> list[str]:
 
     logger.debug(f"Checking licensing for song: {song.title}")
 
-    # Requirement 18.1: Missing CCLI number warning
+    # Missing CCLI number warning
     if not song.ccli_number or not song.ccli_number.strip():
         warnings.append(
             "CCLI number is missing. Please verify licensing information before use."
         )
         logger.info("Missing CCLI number")
 
-    # Requirement 18.2: Incomplete copyright warning
+    # Incomplete copyright warning
     if not song.copyright or not song.copyright.strip():
         warnings.append(
             "Copyright information is incomplete. Please add copyright details."
         )
         logger.info("Missing copyright information")
 
-    # Requirement 18.5: CCLI permission reminder (always included)
+    # CCLI permission reminder (always included)
     warnings.append(
         "Reminder: Please verify that your church has CCLI permission and reporting for this song before use."
     )

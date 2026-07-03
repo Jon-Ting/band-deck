@@ -422,7 +422,7 @@ class TestRoundTripProperty:
     def test_parse_reconstruct_parse_equivalence(self, text, chords):
         """Parse → reconstruct → parse produces equivalent ChordProLine.
 
-        Validates Requirement 5.5: round-trip property for all valid data.
+        Round-trip property test for all valid data.
         """
         # Build chord positions, capping at text length
         chord_positions = [

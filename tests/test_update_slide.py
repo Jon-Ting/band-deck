@@ -235,7 +235,7 @@ def test_update_slide_invalid_formats(saved_slide):
 
 
 # ---------------------------------------------------------------------------
-# Task 5.6 — PUT /api/saved_slide/{id} endpoint contract
+# PUT /api/saved_slide/{id} endpoint contract
 # ---------------------------------------------------------------------------
 
 

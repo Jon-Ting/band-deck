@@ -158,7 +158,6 @@ class TestTranspositionProperties:
         """Transposing by N semitones then by 12-N with the same accidental
         style returns the original chord.
 
-        Validates Requirement 13.1.
         """
         scale = CHROMATIC_SCALE_FLATS if use_flats else CHROMATIC_SCALE_SHARPS
         chord = scale[root_idx] + suffix
@@ -186,7 +185,6 @@ class TestTranspositionProperties:
     ):
         """Chord suffixes (m, 7, maj7, etc.) are preserved when transposing.
 
-        Validates Requirement 13.2.
         """
         scale = CHROMATIC_SCALE_FLATS if use_flats else CHROMATIC_SCALE_SHARPS
         chord = scale[root_idx] + suffix
@@ -218,7 +216,6 @@ class TestTranspositionProperties:
     ):
         """Slash chords transpose both root and bass note.
 
-        Validates Requirement 13.3.
         """
         scale = CHROMATIC_SCALE_FLATS if use_flats else CHROMATIC_SCALE_SHARPS
         root = scale[root_idx]
@@ -260,7 +257,6 @@ class TestTranspositionProperties:
     ):
         """When use_flats=True, results use flat notation; when False, sharp notation.
 
-        Validates Requirement 13.4.
         """
         scale = CHROMATIC_SCALE_FLATS if use_flats else CHROMATIC_SCALE_SHARPS
         chord = scale[root_idx] + suffix
@@ -302,7 +298,7 @@ class TestTranspositionProperties:
     ):
         """transpose_chordpro_lines preserves lyric text and chord positions.
 
-        Validates Requirements 13.1-13.4 collectively for the ChordProLine level.
+        Round-trip property preservation at the ChordProLine level.
         """
         from src.utils.search import get_semitone_shift
 

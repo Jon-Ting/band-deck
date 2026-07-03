@@ -95,7 +95,7 @@ def test_generate_marp_creates_section_slides_with_inline_chords_and_cues():
 
 
 class TestTitleSlideStructure:
-    """Unit tests for title slide completeness (Requirement 8.2)."""
+    """Unit tests for title slide completeness"""
 
     def test_title_slide_contains_title_and_authors(self):
         song = make_song()
@@ -197,7 +197,7 @@ class TestTitleSlideStructure:
 
 
 class TestSectionSlideStructure:
-    """Unit tests for section slide completeness (Requirement 8.3)."""
+    """Unit tests for section slide completeness"""
 
     def test_section_slide_contains_section_heading(self):
         song = make_song()
@@ -312,7 +312,7 @@ class TestSectionSlideStructure:
 
 
 class TestCssInclusion:
-    """Unit tests for CSS template inclusion (Requirement 8.5)."""
+    """Unit tests for CSS template inclusion"""
 
     def test_css_is_included_in_output(self):
         result = generate_marp(make_song())

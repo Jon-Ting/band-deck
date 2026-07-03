@@ -1,4 +1,4 @@
-"""Tests for the /api/save_slide endpoint (Task 5.4)."""
+"""Tests for the /api/save_slide endpoint"""
 
 from __future__ import annotations
 
@@ -228,7 +228,7 @@ class TestSaveSlideEndpoint:
 
     def test_save_slide_explicit_user_action_required(self):
         """
-        Test that save requires explicit POST request (Requirement 14.2).
+        Test that save requires explicit POST request
         This test verifies the endpoint only accepts POST method.
         """
         client = make_client()

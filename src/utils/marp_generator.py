@@ -20,7 +20,7 @@ class MarpOptions:
     aspect_ratio: str = "16:9"
 
 
-# Default toggle sets per Requirements 16.1, 16.2, 16.3. Each style is a
+# Default toggle sets per style. Each style is a
 # composition of the three display toggles plus per-style layout hints
 # (font_size, sidebar ratio, song-map presence on title slide).
 #
@@ -68,8 +68,8 @@ STYLE_PRESETS: dict[str, dict[str, object]] = {
 def _resolve_options(style: str, options: MarpOptions | None) -> MarpOptions:
     """Combine a style preset with any explicit MarpOptions overrides.
 
-    The style preset supplies a baseline configuration (per Requirements
-    16.1, 16.2, 16.3). Explicit ``options`` field values that differ
+    The style preset supplies a baseline configuration
+    (song-map, metadata, practice-notes). Explicit ``options`` field values that differ
     from the dataclass defaults (``MarpOptions()``) win so the
     SongEditor can override per song/band. Passing options that happen to
     match a default is treated the same as "no override": callers
@@ -107,7 +107,7 @@ def generate_marp(
 ) -> str:
     """Generate Marp markdown from structured song data.
 
-    Honors the slide ``style`` preset (Requirements 16.1-16.6) and any
+    Honors the slide ``style`` preset and any
     explicit ``MarpOptions`` overrides supplied by the caller.
     """
     resolved_options = _resolve_options(style, options)
@@ -226,8 +226,8 @@ def _generate_section_slide(
 ) -> str:
     parts = [f"## {_escape(section.name)}"]
 
-    # Practice-mode navigation strip showing the full song map. Per
-    # Requirement 17.4, this is visible on all slides in practice style;
+    # Practice-mode navigation strip showing the full song map. This
+    # is visible on all slides in practice style;
     # other styles either render it in the sidebar or hide it entirely
     # depending on their preset. The user's MarpOptions.show_song_map
     # toggle always wins so an explicit request to hide the map is

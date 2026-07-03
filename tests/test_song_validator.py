@@ -1,7 +1,7 @@
 """Tests for song validator functionality.
 
-Covers Requirements 7.1-7.8 (data validation) and 18.1, 18.2, 18.5 (licensing
-warnings) handled by ``src.utils.song_validator``.
+Covers data validation and licensing warnings handled by
+``src.utils.song_validator``.
 """
 
 import pytest
@@ -77,7 +77,7 @@ def _song(
 
 
 # ---------------------------------------------------------------------------
-# validate_song — Requirement 7.1, 7.2, 7.4, 7.5
+# validate_song
 # ---------------------------------------------------------------------------
 
 
@@ -92,7 +92,7 @@ class TestValidateSong:
         assert result.is_valid is True
         assert result.errors == []
         # The CCLI reminder is intentionally not emitted here; only on explicit
-        # ``check_licensing`` calls (per Requirement 18.5).
+        # ``check_licensing`` calls
         assert result.warnings == []
 
     def test_missing_arrangement_section_returns_error_7_1(self):
@@ -186,7 +186,7 @@ class TestValidateSong:
 
         result = validate_song(song)
 
-        # Missing authors is a warning, not an error, per Requirement 7.5
+        # Missing authors is a warning, not an error.
         assert result.is_valid is True
         assert any("author" in warn.lower() for warn in result.warnings)
 
@@ -200,12 +200,11 @@ class TestValidateSong:
 
 
 # ---------------------------------------------------------------------------
-# Placeholder detection — Requirement 7.7, 7.8
-# ---------------------------------------------------------------------------
+# Placeholder detection# ---------------------------------------------------------------------------
 
 
 class TestPlaceholderCheck:
-    """Tests for explicit placeholder detection (Requirements 7.7, 7.8)."""
+    """Tests for explicit placeholder detection"""
 
     def test_placeholder_check_disabled_by_default_7_8(self):
         song = _song(title="[placeholder Draft]")
@@ -329,12 +328,12 @@ class TestIsValidChord:
 
 
 # ---------------------------------------------------------------------------
-# Overflow estimation — Requirement 7.3
+# Overflow estimation
 # ---------------------------------------------------------------------------
 
 
 class TestEstimateSlideOverflow:
-    """Tests for estimate_slide_overflow (Requirement 7.3)."""
+    """Tests for estimate_slide_overflow."""
 
     def test_short_section_in_practice_style_no_warning(self):
         lines = [_line(f"Line {i}", ("G", 0)) for i in range(8)]
@@ -481,12 +480,12 @@ class TestEstimateSlideOverflow:
 
 
 # ---------------------------------------------------------------------------
-# Licensing — Requirements 7.6, 18.1, 18.2, 18.5
+# Licensing
 # ---------------------------------------------------------------------------
 
 
 class TestCheckLicensing:
-    """Tests for the check_licensing helper (Requirements 7.6, 18.1, 18.2, 18.5)."""
+    """Tests for the check_licensing helper."""
 
     def test_missing_ccli_number_warns_18_1(self):
         song = _song(ccli_number=None)
@@ -510,7 +509,7 @@ class TestCheckLicensing:
 
         warnings = check_licensing(song)
 
-        # The CCLI permission reminder is unconditional, per Requirement 18.5.
+        # The CCLI permission reminder is unconditional.
         assert any("CCLI permission" in warn for warn in warnings)
 
     def test_reminder_emitted_even_when_warnings_present(self):

@@ -52,7 +52,7 @@ def save_slide(song_data: dict, formats: List[str] | None = None) -> dict:
           (``yaml.safe_dump`` over the SongYAML, ``generate_marp``, and
           ``render_html`` respectively). They were previously placeholder
           files while the Marp pipeline matured.
-        - Metadata structure complies with Requirement 14.3.
+        - Metadata structure follows the documented contract.
     """
     if formats is None:
         formats = ["yaml", "marp", "html"]
@@ -169,8 +169,6 @@ def update_slide(slide_id: str, request_data: dict) -> dict:
     Raises:
         FileNotFoundError: If the slide doesn't exist
         ValueError: If song data is invalid
-
-    Requirements: 14.7
     """
     logger = logging.getLogger(__name__)
 

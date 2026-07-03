@@ -64,7 +64,7 @@ def search_song():
 
 @api_bp.route('/health', methods=['GET'])
 def api_health():
-    """Operational health probe (Requirement 9.4).
+    """Operational health probe.
 
     Reports whether the dependencies needed to render HTML decks are
     available, plus storage directory size so an operator can spot
@@ -134,7 +134,7 @@ def api_generate_preview():
 
 @api_bp.route('/validate', methods=['POST'])
 def api_validate_song():
-    """Validate a song YAML payload (Requirements 7.1, 7.7).
+    """Validate a song YAML payload.
 
     Body:
         song (dict)               - The song YAML payload (title, authors,
@@ -145,9 +145,8 @@ def api_validate_song():
                                     Defaults to ``"practice"``.
         check_placeholders (bool) - When true, also flag TODO/TBD/XXX/{}/
                                     [placeholder] markers in the lyrics and
-                                    metadata. Defaults to false (Requirement
-                                    7.8: the placeholder check must be
-                                    opt-in).
+                                    metadata. Defaults to false (the
+                                    placeholder check is opt-in).
 
     Returns:
         ``200 OK`` with the validation status, errors, warnings, overflow,
@@ -318,8 +317,6 @@ def api_save_slide():
     Returns:
         Metadata dict with 'id', 'title', 'artist', 'key', 'filenames',
         'created_at', 'updated_at', and optional fields
-
-    Requirements: 14.1, 14.2, 14.3
     """
     request_data = request.json
     if not request_data:
@@ -361,8 +358,6 @@ def api_list_slides():
     Returns:
         List of metadata dicts, each including 'filenames' dict
         showing which formats are available.
-    
-    Requirements: 14.5
     """
     return jsonify(list_slides())
 
@@ -387,8 +382,6 @@ def api_download_slide_format(slide_id, format):
     Download a saved slide in a specific format.
 
     Supported formats: html, marp, yaml, pdf
-
-    Requirements: 14.5
     """
     valid_formats = {'html', 'marp', 'yaml', 'pdf'}
     if format not in valid_formats:
@@ -460,15 +453,12 @@ def api_update_saved_slide(slide_id):
                            Defaults to all existing formats
     
     Returns:
-        Updated metadata dict with 'id', 'title', 'artist', 'key', 'filenames',
-        'created_at', 'updated_at'
-    
-    Requirements: 14.7
+        Updated metadata dict with 'id', 'title', 'artist', 'key', 'filenames',        'created_at', 'updated_at'
     """
     request_data = request.json
     if not request_data:
         return jsonify({'error': 'No data provided'}), 400
-    
+
     try:
         meta = update_slide(slide_id, request_data)
         return jsonify(meta)
@@ -500,8 +490,6 @@ def api_compile_html():
 
     Returns:
         A downloadable HTML file (``text/html``) named after the deck.
-
-    Requirements: 15.1, 15.2, 15.3, 15.4, 15.5
     """
     request_data = request.get_json(silent=True) or {}
 

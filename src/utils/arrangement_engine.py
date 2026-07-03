@@ -2,7 +2,6 @@
 
 Provides functions to propose default arrangements based on section types,
 validate arrangement integrity, and update arrangements with reorder/repeat/insert operations.
-Validates: Requirements 6.1, 6.2, 6.7
 """
 
 import logging

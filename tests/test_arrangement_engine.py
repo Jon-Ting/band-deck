@@ -393,8 +393,7 @@ class TestUpdateArrangement:
 
 
 # ---------------------------------------------------------------------------
-# Task 7.2  Property 12: Arrangement Referential Integrity
-# Validates: Requirements 6.7, 7.1
+# Property 12: Arrangement Referential Integrity
 # ---------------------------------------------------------------------------
 
 # Section names are non-empty strings; avoid whitespace-only edge cases by
@@ -428,8 +427,6 @@ class TestArrangementReferentialIntegrity:
     is a key in the sections dict. Conversely, when any arrangement entry
     does not reference an existing section, the function reports an error for
     each such occurrence and returns ``is_valid=False``.
-
-    Validates: Requirements 6.7, 7.1
 
     The first test is a hypothesis property test that exercises 100 random
     examples; the remaining three are written as readable documentation of

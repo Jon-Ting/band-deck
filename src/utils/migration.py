@@ -4,12 +4,12 @@ Slides saved before the multi-format refactor (and before PPTX export was
 retired) only carried a single primary artefact plus metadata JSON. This
 utility backfills YAML, Marp markdown, and HTML files for any slide that
 lacks them so every saved slide participates in the modern multi-format
-workflow (requirement 14.7).
+workflow.
 
 Design notes:
 
-* PPTX text extraction is deliberately skipped (despite task 5.3 calling for
-  it). Parsing rendered slide text back into structured sections/chords is
+* PPTX text extraction is deliberately skipped. Parsing rendered
+  slide text back into structured sections/chords is
   brittle and was considered out of scope: the migration emits a placeholder
   ``Note`` section that carries song metadata and directs the user to
   re-generate from the chart source when the original lyrics and chords are
