@@ -115,22 +115,21 @@ Use Consolas (a monospace font) for all slide content.
 ## ADR-006 — In-memory rate limiting
 
 **Date**: Initial development  
-**Status**: Active (with known limitations)
+**Status**: Superseded; rate limiting is currently disabled
 
 ### Context
 Band-Deck's `/api/` endpoints scrape an external site. Unbounded scraping risks being blocked or causing harm to the source site.
 
 ### Decision
-Implement a simple per-IP timestamp dictionary in `api.py` (5-second window → ~10 req/min).
+The previous simple per-IP timestamp dictionary in `api.py` was removed. Band-Deck currently does not enforce application-level request throttling.
 
 ### Rationale
-- Simple to implement and reason about for a single-process personal server.
-- No external dependencies (no Redis, no Flask-Limiter).
+- Keeps local rehearsal workflow requests from being blocked by app-level throttling.
+- Avoids maintaining a single-process limiter that does not behave correctly under multi-worker deployment.
 
 ### Trade-offs
-- State is lost on restart.
-- Does not scale across multiple worker processes.
-- Recommendation: replace with `Flask-Limiter` + Redis if ever deployed publicly.
+- No app-level protection against bulk requests.
+- Recommendation: add `Flask-Limiter` + Redis, or equivalent reverse-proxy throttling, before any public deployment.
 
 ---
 

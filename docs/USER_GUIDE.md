@@ -49,7 +49,7 @@ By using this application you acknowledge that:
 
 - Generated slides may be subject to copyright. You are responsible for ensuring appropriate licensing (e.g. **CCLI** for worship use, or **ASCAP / BMI / SESAC** for general public performance) before projection or distribution.
 - Acceptable use includes (but is not limited to) worship services, concerts, rehearsals, and lessons.
-- The application respects rate limits of source websites to prevent overloading their servers.
+- Rate limiting is currently disabled; avoid bulk scraping and follow source-site terms.
 - This project ships with template/sample songs only — please verify each song's licensing status for your jurisdiction and use case.
 - The maintainers do not endorse redistribution of copyrighted lyrics or chord charts outside the bounds of fair use.
 
@@ -71,7 +71,7 @@ The downloaded `.pptx` files can be opened in PowerPoint, Keynote, or LibreOffic
 
 - The application is built using Flask (Python) and modern web technologies
 - PowerPoint files are generated with adaptive layout and font sizing for projection on different displays
-- The application includes rate limiting to respect source websites
+- Rate limiting is currently disabled
 
 ---
 

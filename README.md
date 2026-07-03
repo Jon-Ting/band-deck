@@ -2,7 +2,7 @@
 
 ## What is Band-Deck?
 
-Band-Deck turns a song name (and an optional artist and key) into a ready-to-project HTML / Marp slide deck with lyrics and chords. It pulls chords and lyrics from public sources, transposes to the key you ask for, and lays out clean, click-throughable slides — so worship leaders, band directors, music teachers, and solo performers can focus on the music instead of the formatting. Save slides to a personal library as YAML / Marp markdown / HTML, batch them into a single clickable deck, and keep the music moving.
+Band-Deck turns a song name (and an optional artist and key) into a ready-to-project HTML / Marp slide deck with lyrics and chords. It pulls chords and lyrics from public sources, transposes to the key you ask for, and lays out clean, click-throughable slides — so you can focus on the music instead of the formatting. Save slides to a personal library as YAML / Marp markdown / HTML, batch them into a single clickable deck, and keep the music moving.
 
 A Python Flask web application that creates musician-friendly slides with lyrics and chords for songs of any genre in one click. Search a song by name and (optionally) artist, transpose to any key, preview the rendered deck in the browser, edit live, and download YAML, Marp markdown, or rendered HTML — all optimised for projection during services, concerts, rehearsals, or lessons.
 
@@ -21,7 +21,7 @@ A Python Flask web application that creates musician-friendly slides with lyrics
 - 🌐 **HTML/Marp workflow** — Generates standalone Marp-driven HTML decks; preview in-browser, edit live, regenerate on blur
 - 🎬 **Multiple slide styles** — Choose `practice`, `performance`, or `simple` style for each song
 - 📝 **YAML editor** — Modify metadata, chords, lyrics, arrangement, and practice notes; the preview auto-updates after a 500 ms debounce
-- 🔔 **Validation warnings** — Live errors, slide overflow, and CCLI/licensing reminders surface in the editor
+- 🔔 **Validation warnings** — Live errors, slide overflow, and licensing reminders surface in the editor
 - 💾 **Slide library** — Save slides as YAML, Marp, HTML, or PDF; re-download or delete any time
 - 📦 **Batch compilation** — Combine saved slides into a single HTML deck with a clickable index
 - 🧹 **Cleanup** — One-click removal of temporary files
@@ -84,8 +84,6 @@ For a production-like install without dev tooling, use:
 ```bash
 uv sync --no-dev
 ```
-
-> Prefer plain `pip`? `uv` is optional — dev tooling is now in a PEP 735 group (`[dependency-groups]`), so pip needs at least **24.2** and the `--group` flag (e.g. `pip install --group dev`) to install it; for runtime deps alone, `pip install -e .` is unaffected.
 
 **Contributors**: when you change dependencies in `pyproject.toml`, regenerate the lockfile first, then apply:
 
@@ -229,7 +227,7 @@ For full legal terms (intended use, licensing responsibilities, redistribution, 
 
 ## 🛠️ Development Notes
 
-- **Rate limiting** is enforced via a simple per-IP counter in `src/main.py`. Suitable for personal/small-team use; replace with a proper limiter (e.g. `Flask-Limiter`) for production.
+- **Rate limiting** is currently disabled. Add a proper external limiter (for example, `Flask-Limiter` backed by Redis) before any public deployment that needs request throttling.
 - **Logging** defaults to `INFO`. Adjust `logging.basicConfig(level=...)` in the modules to suit your environment.
 - **Slide storage** is local-disk based. For multi-user or production deployments, swap `src/utils/slide_storage.py` for a database-backed implementation.
 - **Marp CLI** must be installed for HTML rendering; if missing the renderer falls back to a static HTML placeholder so the slide stays loadable (see `src/utils/migration.py` for the same fallback strategy during batch backfill).
@@ -238,7 +236,7 @@ For full legal terms (intended use, licensing responsibilities, redistribution, 
 
 ## 🙏 Acknowledgements
 
-- Lyrics and chords are sourced from [Worship Together](https://www.worshiptogether.com/).
+- Current lyrics and chords are sourced from [Worship Together](https://www.worshiptogether.com/).
 - HTML rendering powered by [Marp CLI](https://github.com/marp-team/marp-cli).
 - Built with [Flask](https://flask.palletsprojects.com/).
 

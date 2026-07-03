@@ -76,7 +76,6 @@ All configuration is currently hardcoded in `src/main.py`. Key values to change 
 | `debug` | `app.run(debug=True)` | `True` | Set to `False` in production |
 | `host` | `app.run(host='0.0.0.0')` | `0.0.0.0` | Binds to all interfaces |
 | `port` | `app.run(port=5000)` | `5000` | |
-| `RATE_LIMIT_SECONDS` | `src/routes/api.py` | `5` | Seconds between requests per IP |
 | `saved_slides/` path | `src/utils/slide_storage.py` | `src/saved_slides/` | Local disk; swap for remote storage in production |
 
 To disable debug mode:
@@ -108,7 +107,7 @@ uv add gunicorn
 uv run gunicorn -w 2 -b 0.0.0.0:5000 'src.main:app'
 ```
 
-> **Note**: The current in-memory rate limiter does not work correctly with multiple Gunicorn workers (each worker has its own state). Replace it with `Flask-Limiter` + Redis before scaling.
+> **Note**: Rate limiting is currently disabled. Add a shared limiter, such as `Flask-Limiter` backed by Redis, before scaling a public deployment.
 
 ### Reverse Proxy (nginx)
 Put nginx in front of Gunicorn to handle TLS, static file serving, and request buffering:
@@ -131,7 +130,7 @@ server {
 ```
 
 ### Rate Limiting at Scale
-Replace the in-memory rate limiter in `api.py` with `Flask-Limiter`:
+Add `Flask-Limiter` with shared Redis storage:
 
 ```bash
 uv add flask-limiter[redis]

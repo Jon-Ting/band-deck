@@ -8,7 +8,7 @@ Band-Deck is a single-server Flask web application with a vanilla JS frontend. T
 Browser (Vanilla JS)
        │  HTTP (JSON / file download)
        ▼
-Flask App  ──  Rate Limiter (per-IP, in-memory)
+Flask App
        │
        ├── routes/api.py        ← HTTP boundary; thin handlers only
        │
@@ -26,7 +26,6 @@ Flask App  ──  Rate Limiter (per-IP, in-memory)
 ### `src/routes/api.py`
 - Defines the Flask Blueprint `api_bp` mounted at `/api/`.
 - Each route handler is a thin wrapper: validate input → call a utility → return JSON or stream a file.
-- Rate limiting is enforced here via a simple per-IP timestamp dict (`request_timestamps`).
 - **Does not** contain business logic.
 
 ### `src/utils/search.py`
@@ -111,9 +110,8 @@ for num_cols in [2, 3, 4]:
 
 ## Rate Limiting
 
-- Implemented as an in-memory dict: `{ip: [timestamps]}`.
-- Limit: ~10 requests/minute per IP (one request per 5 seconds via `RATE_LIMIT_SECONDS = 5`).
-- **Caveat**: State is lost on server restart and does not scale across multiple processes. Suitable for personal/small-team use. For production, replace with `Flask-Limiter` backed by Redis.
+- Rate limiting is currently disabled.
+- For public or multi-user deployments, add a limiter at the Flask or reverse-proxy layer with shared external state, such as `Flask-Limiter` backed by Redis.
 
 ---
 
@@ -146,6 +144,6 @@ src/saved_slides/
 |------|---------|--------------|
 | Song source | Worship Together only | Add more sources (e.g. Ultimate Guitar, OpenSong) |
 | Storage | Local disk | Swap `slide_storage.py` for a DB-backed implementation |
-| Rate limiting | In-memory per-IP | Flask-Limiter + Redis |
+| Rate limiting | Disabled | Flask-Limiter + Redis |
 | Multi-user | Not supported | Session-scoped slide libraries |
 | Auth | None | Add auth if multi-user is needed |
