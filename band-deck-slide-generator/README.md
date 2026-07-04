@@ -6,7 +6,7 @@ The workflow is source-traced and conservative: do not invent lyrics, chords, au
 
 Practice decks are the default output: chords render above lyrics, section slides show now/next/after context instead of the full song map, and pagination is disabled. Use review mode when checking metadata, sources, licence state, or arrangement correctness before rehearsal.
 
-Long lyric sections split across continuation slides by default. The generator keeps chord/lyric pairs together, repeats the section context on each continuation slide, and avoids shrinking below practice-readable font floors.
+Long lyric sections split across continuation slides by default. The generator keeps chord/lyric pairs together, repeats the section context on each continuation slide, and avoids shrinking below practice-readable font floors. YAML can set global render defaults, and each arrangement entry can override `max_line_pairs_per_slide` and chart font sizes for the slides generated from that entry.
 
 ## Target Architecture
 
@@ -79,6 +79,26 @@ verification:
 ```
 
 Use `schema/song-deck.schema.yaml` as the contract between modules. Non-canonical top-level shapes are rejected instead of being adapted.
+
+Global practice defaults live under top-level `render`:
+
+```yaml
+render:
+  max_line_pairs_per_slide: 6
+  font_size_px: 30
+```
+
+Per-slide-group overrides live on arrangement entries:
+
+```yaml
+arrangement:
+  sequence:
+    - section: Verse
+      render:
+        max_line_pairs_per_slide: 4
+        font_size_px: 26
+        chord_font_px: 22
+```
 
 ## Copyright Caution
 

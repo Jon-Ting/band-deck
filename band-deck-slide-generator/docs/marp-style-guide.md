@@ -31,6 +31,7 @@ render:
   show_pagination: false
   overflow_strategy: split
   max_line_pairs_per_slide: 6
+  font_size_px: 30
   min_lyric_font_px: 28
   min_chord_font_px: 22
   continuation_labels: true
@@ -38,6 +39,25 @@ render:
 ```
 
 Use 30-36px lyric text, 24-30px chord text, and 34-40px section titles for projection readability.
+
+Use arrangement-entry `render` blocks for slide-specific density or font sizing:
+
+```yaml
+arrangement:
+  sequence:
+    - section: Verse
+      render:
+        max_line_pairs_per_slide: 4
+        font_size_px: 26
+    - section: Chorus
+      render:
+        max_line_pairs_per_slide: 3
+        font_size_px: 34
+        chord_font_px: 30
+```
+
+Prefer `font_size_px` for shared chord/lyric sizing. Use `lyric_font_px`,
+`chord_font_px`, and `bar_font_px` only when a slide needs separate sizing.
 
 ## Overflow Policy
 

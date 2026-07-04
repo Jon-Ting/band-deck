@@ -33,27 +33,32 @@ h1, h2 {
   font-family: "Courier New", monospace;
   margin: 10px 0;
 }
+.chart-lines {
+  --chart-font-size: 30px;
+  --lyric-font-size: var(--chart-font-size);
+  --chord-font-size: var(--chart-font-size);
+  --bar-font-size: var(--chart-font-size);
+}
 .line-pair {
-  --chart-font-size: 34px;
   font-family: "Courier New", monospace;
   white-space: pre;
   margin: 10px 0 18px;
 }
 .chord-line {
   color: #c2410c;
-  font-size: var(--chart-font-size);
+  font-size: var(--chord-font-size);
   font-weight: 800;
   line-height: 1.05;
 }
 .lyric-line {
   color: #111827;
-  font-size: var(--chart-font-size);
+  font-size: var(--lyric-font-size);
   line-height: 1.1;
 }
 .bar-line {
   font-family: "Courier New", monospace;
   color: #111827;
-  font-size: 36px;
+  font-size: var(--bar-font-size);
   font-weight: 800;
   line-height: 1.35;
   margin: 10px 0;
@@ -120,7 +125,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 30px;">
 <div class="bar-line">| G | D | C | G |</div>
 <div class="bar-line">| G | D | C | G |</div>
 </div>
@@ -143,7 +148,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 28px;">
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 1&gt;</div></div>
 <div class="line-pair"><div class="chord-line">C</div><div class="lyric-line">&lt;licensed verse line 2&gt;</div></div>
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 3&gt;</div></div>
@@ -168,7 +173,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 30px;">
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 1&gt;</div></div>
 <div class="line-pair"><div class="chord-line">C</div><div class="lyric-line">&lt;licensed verse line 2&gt;</div></div>
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 3&gt;</div></div>
@@ -193,7 +198,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 30px;">
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 1&gt;</div></div>
 <div class="line-pair"><div class="chord-line">C</div><div class="lyric-line">&lt;licensed verse line 2&gt;</div></div>
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 3&gt;</div></div>
@@ -218,7 +223,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 30px;">
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 1&gt;</div></div>
 <div class="line-pair"><div class="chord-line">C</div><div class="lyric-line">&lt;licensed verse line 2&gt;</div></div>
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed verse line 3&gt;</div></div>
@@ -243,7 +248,7 @@ h1, h2 {
 <div class="meta"><span>Key: G</span><span>BPM: unknown</span><span>Time: 4/4</span><span>Capo: none</span></div>
 
 <div class="layout">
-<div>
+<div class="chart-lines" style="--chart-font-size: 30px;">
 <div class="line-pair"><div class="chord-line">G</div><div class="lyric-line">&lt;licensed ending line&gt;</div></div>
 </div>
 <div class="song-map">

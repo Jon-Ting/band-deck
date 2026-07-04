@@ -60,6 +60,15 @@ Other notes:
 
 - 
 
+## Render Preferences
+
+Global max line pairs per slide:
+Global chart font size px:
+
+Per-section or per-slide overrides:
+
+- 
+
 ## Source Preferences
 
 Allowed sources:

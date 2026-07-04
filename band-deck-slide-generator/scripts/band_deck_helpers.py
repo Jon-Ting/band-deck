@@ -298,6 +298,36 @@ def get_render_options(deck: dict[str, Any]) -> dict[str, Any]:
     return options
 
 
+SLIDE_RENDER_KEYS = {
+    "max_line_pairs_per_slide",
+    "font_size_px",
+    "chart_font_px",
+    "lyric_font_px",
+    "chord_font_px",
+    "bar_font_px",
+}
+
+
+def get_slide_render_options(
+    base_options: dict[str, Any], entry: dict[str, Any], section: Any
+) -> dict[str, Any]:
+    """Return render options for one arrangement entry/slide group."""
+    options = dict(base_options)
+
+    if isinstance(section, dict) and isinstance(section.get("render"), dict):
+        options.update(section["render"])
+
+    for key in SLIDE_RENDER_KEYS:
+        if key in entry:
+            options[key] = entry[key]
+
+    entry_render = entry.get("render")
+    if isinstance(entry_render, dict):
+        options.update(entry_render)
+
+    return options
+
+
 def positive_int(value: Any, default: int) -> int:
     """Return a positive integer option value."""
     try:
@@ -305,6 +335,34 @@ def positive_int(value: Any, default: int) -> int:
     except (TypeError, ValueError):
         return default
     return parsed if parsed > 0 else default
+
+
+def positive_int_or_none(value: Any) -> int | None:
+    """Return a positive integer option value, or None when absent/invalid."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def chart_style_attribute(render_options: dict[str, Any]) -> str:
+    """Return inline CSS variables for chart font sizing."""
+    base_font = positive_int_or_none(
+        render_options.get("font_size_px") or render_options.get("chart_font_px")
+    )
+    style_values = {
+        "--chart-font-size": base_font,
+        "--lyric-font-size": positive_int_or_none(render_options.get("lyric_font_px")),
+        "--chord-font-size": positive_int_or_none(render_options.get("chord_font_px")),
+        "--bar-font-size": positive_int_or_none(render_options.get("bar_font_px")),
+    }
+    declarations = [
+        f"{name}: {value}px;"
+        for name, value in style_values.items()
+        if value is not None
+    ]
+    return f' style="{" ".join(declarations)}"' if declarations else ""
 
 
 def default_marp_style() -> str:
@@ -339,27 +397,32 @@ h1, h2 {
   font-family: "Courier New", monospace;
   margin: 10px 0;
 }
-.line-pair {
+.chart-lines {
   --chart-font-size: 30px;
+  --lyric-font-size: var(--chart-font-size);
+  --chord-font-size: var(--chart-font-size);
+  --bar-font-size: var(--chart-font-size);
+}
+.line-pair {
   font-family: "Courier New", monospace;
   white-space: pre;
   margin: 10px 0 18px;
 }
 .chord-line {
   color: #c2410c;
-  font-size: var(--chart-font-size);
+  font-size: var(--chord-font-size);
   font-weight: 800;
   line-height: 1.05;
 }
 .lyric-line {
   color: #111827;
-  font-size: var(--chart-font-size);
+  font-size: var(--lyric-font-size);
   line-height: 1.1;
 }
 .bar-line {
   font-family: "Courier New", monospace;
   color: #111827;
-  font-size: 32px;
+  font-size: var(--bar-font-size);
   font-weight: 800;
   line-height: 1.35;
   margin: 10px 0;
@@ -422,9 +485,6 @@ def generate_practice_marp(deck: dict[str, Any]) -> str:
     mode = str(render_options.get("mode") or "practice")
     paginate = "true" if render_options.get("show_pagination") is True else "false"
     overflow_strategy = str(render_options.get("overflow_strategy") or "split")
-    max_lines_per_slide = positive_int(
-        render_options.get("max_line_pairs_per_slide"), default=6
-    )
 
     title = metadata_value(metadata, "title")
     authors = metadata_value(metadata, "authors")
@@ -471,9 +531,14 @@ def generate_practice_marp(deck: dict[str, Any]) -> str:
         if not rendered_lines:
             cue = entry.get("cue") or "Cue-only or missing section content."
             rendered_lines = [f'<div class="cue-box">{html.escape(str(cue))}</div>']
+        slide_render_options = get_slide_render_options(render_options, entry, section)
+        max_lines_per_slide = positive_int(
+            slide_render_options.get("max_line_pairs_per_slide"), default=6
+        )
         line_chunks = chunk_rendered_lines(
             rendered_lines, overflow_strategy, max_lines_per_slide
         )
+        chart_style = chart_style_attribute(slide_render_options)
 
         section_label = repeat_labels.get(index, display_title)
         chunk_labels = continuation_labels(section_label, len(line_chunks))
@@ -495,7 +560,7 @@ def generate_practice_marp(deck: dict[str, Any]) -> str:
                     _meta_bar(key, bpm, time_signature, capo),
                     "",
                     '<div class="layout">',
-                    "<div>",
+                    f'<div class="chart-lines"{chart_style}>',
                     *line_chunk,
                     "</div>",
                     '<div class="song-map">',

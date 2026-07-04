@@ -73,6 +73,7 @@ render:
   show_pagination: false
   overflow_strategy: split
   max_line_pairs_per_slide: 6
+  font_size_px: 30
   min_lyric_font_px: 28
   min_chord_font_px: 22
   continuation_labels: true
@@ -82,6 +83,30 @@ verification:
   chords: unverified
   ccli: unverified
 ```
+
+Set slide-specific layout overrides on arrangement entries when one section needs
+different density or text sizing. These values override top-level `render`
+defaults for the slides generated from that arrangement entry:
+
+```yaml
+arrangement:
+  sequence:
+    - section: Verse
+      label: Verse small
+      render:
+        max_line_pairs_per_slide: 4
+        font_size_px: 26
+        chord_font_px: 22
+    - section: Chorus
+      label: Chorus big
+      render:
+        max_line_pairs_per_slide: 3
+        font_size_px: 34
+```
+
+Use `font_size_px` as the shared chart font size. Use `lyric_font_px`,
+`chord_font_px`, or `bar_font_px` only when lyrics, chords, or instrumental
+bar charts need different sizing on that slide group.
 
 Use `schema/song-deck.schema.yaml` for validation. Keep source confidence and review notes in the YAML, not only in chat. Do not pass legacy top-level shapes like `title` / `sections` / list-form `arrangement` directly to the generator scripts.
 

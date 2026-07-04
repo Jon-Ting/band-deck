@@ -32,6 +32,8 @@ Practice deck rules:
 - Show only now, next, after, and urgent cues on section slides.
 - Disable pagination.
 - Split long sections at chord/lyric line-pair boundaries before shrinking text.
+- Put default line-pair limits and chart font sizes in top-level `render`.
+- Put per-slide overrides in arrangement entry `render` blocks.
 - Use review mode only for source, verification, and licence checks.
 
 Output:

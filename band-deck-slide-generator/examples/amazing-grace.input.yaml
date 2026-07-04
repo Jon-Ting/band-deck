@@ -90,6 +90,9 @@ arrangement:
     - section: Verse
       label: Verse 1
       cue: Restrained
+      render:
+        max_line_pairs_per_slide: 4
+        font_size_px: 28
     - section: Verse
       label: Verse 2
       cue: Add harmony
@@ -109,6 +112,7 @@ render:
   show_pagination: false
   overflow_strategy: split
   max_line_pairs_per_slide: 6
+  font_size_px: 30
   min_lyric_font_px: 28
   min_chord_font_px: 22
   continuation_labels: true

@@ -16,12 +16,14 @@ class GeneratePracticeMarpTests(unittest.TestCase):
         style = default_marp_style()
 
         self.assertIn("--chart-font-size: 30px;", style)
+        self.assertIn("--lyric-font-size: var(--chart-font-size);", style)
+        self.assertIn("--chord-font-size: var(--chart-font-size);", style)
         self.assertIn(
-            ".chord-line {\n  color: #c2410c;\n  font-size: var(--chart-font-size);",
+            ".chord-line {\n  color: #c2410c;\n  font-size: var(--chord-font-size);",
             style,
         )
         self.assertIn(
-            ".lyric-line {\n  color: #111827;\n  font-size: var(--chart-font-size);",
+            ".lyric-line {\n  color: #111827;\n  font-size: var(--lyric-font-size);",
             style,
         )
 
@@ -114,6 +116,76 @@ class GeneratePracticeMarpTests(unittest.TestCase):
         self.assertIn("## Verse 1 cont. 2\n", marp)
         self.assertLess(marp.index("licensed line 3"), marp.index("## Verse 1 cont."))
         self.assertLess(marp.index("licensed line 6"), marp.index("## Verse 1 cont. 2"))
+
+    def test_arrangement_entries_can_override_line_count_and_font_size(self) -> None:
+        deck = {
+            "request": {"title": "Per Slide Render Test"},
+            "metadata": {
+                "title": "Per Slide Render Test",
+                "authors": ["Example"],
+                "target_key": "G",
+                "bpm": "unknown",
+                "time_signature": "4/4",
+                "capo": "none",
+            },
+            "sources": {
+                "metadata": [{"label": "test"}],
+                "lyrics_chords": [{"label": "test"}],
+            },
+            "normalised_chordpro": {
+                "sections": {
+                    "Verse": {
+                        "type": "verse",
+                        "lines": [
+                            {"chordpro": f"[G]licensed line {line_number}"}
+                            for line_number in range(1, 5)
+                        ],
+                    }
+                }
+            },
+            "arrangement": {
+                "sequence": [
+                    {
+                        "section": "Verse",
+                        "label": "Verse small",
+                        "render": {
+                            "max_line_pairs_per_slide": 2,
+                            "font_size_px": 26,
+                            "chord_font_px": 22,
+                        },
+                    },
+                    {
+                        "section": "Verse",
+                        "label": "Verse large",
+                        "render": {
+                            "max_line_pairs_per_slide": 4,
+                            "font_size_px": 34,
+                            "lyric_font_px": 36,
+                        },
+                    },
+                ]
+            },
+            "render": {
+                "mode": "practice",
+                "overflow_strategy": "split",
+                "max_line_pairs_per_slide": 6,
+            },
+        }
+
+        marp = generate_practice_marp(deck)
+
+        self.assertIn("## Verse small cont.\n", marp)
+        self.assertNotIn("## Verse large cont.\n", marp)
+        self.assertIn(
+            '<div class="chart-lines" style="--chart-font-size: 26px; '
+            '--chord-font-size: 22px;">',
+            marp,
+        )
+        self.assertIn(
+            '<div class="chart-lines" style="--chart-font-size: 34px; '
+            '--lyric-font-size: 36px;">',
+            marp,
+        )
 
     def test_rejects_legacy_top_level_shape(self) -> None:
         legacy_deck = {

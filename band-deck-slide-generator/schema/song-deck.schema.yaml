@@ -211,44 +211,7 @@ properties:
         $ref: "#/$defs/stringList"
 
   render:
-    type: object
-    additionalProperties: true
-    properties:
-      mode:
-        type: string
-        enum:
-          - practice
-          - review
-      chord_layout:
-        type: string
-        enum:
-          - above_lyrics
-          - inline
-      show_full_song_map:
-        type: boolean
-      show_pagination:
-        type: boolean
-      overflow_strategy:
-        type: string
-        enum:
-          - split
-          - shrink
-          - manual-review
-      max_line_pairs_per_slide:
-        type: integer
-        minimum: 1
-      min_lyric_font_px:
-        type: integer
-        minimum: 1
-      min_chord_font_px:
-        type: integer
-        minimum: 1
-      continuation_labels:
-        type: boolean
-      theme:
-        type:
-          - string
-          - "null"
+    $ref: "#/$defs/renderOptions"
 
   deck:
     type: object
@@ -280,6 +243,8 @@ properties:
       renderer:
         type: object
         additionalProperties: true
+      render:
+        $ref: "#/$defs/renderOptions"
 
   validation:
     type: object
@@ -334,6 +299,61 @@ $defs:
       - marp
       - html
       - pdf
+
+  renderOptions:
+    type: object
+    additionalProperties: true
+    properties:
+      mode:
+        type: string
+        enum:
+          - practice
+          - review
+      chord_layout:
+        type: string
+        enum:
+          - above_lyrics
+          - inline
+      show_full_song_map:
+        type: boolean
+      show_pagination:
+        type: boolean
+      overflow_strategy:
+        type: string
+        enum:
+          - split
+          - shrink
+          - manual-review
+      max_line_pairs_per_slide:
+        type: integer
+        minimum: 1
+      font_size_px:
+        type: integer
+        minimum: 1
+      chart_font_px:
+        type: integer
+        minimum: 1
+      lyric_font_px:
+        type: integer
+        minimum: 1
+      chord_font_px:
+        type: integer
+        minimum: 1
+      bar_font_px:
+        type: integer
+        minimum: 1
+      min_lyric_font_px:
+        type: integer
+        minimum: 1
+      min_chord_font_px:
+        type: integer
+        minimum: 1
+      continuation_labels:
+        type: boolean
+      theme:
+        type:
+          - string
+          - "null"
 
   keyOrUnknown:
     type:
@@ -422,6 +442,8 @@ $defs:
           - "null"
       notes:
         $ref: "#/$defs/stringList"
+      render:
+        $ref: "#/$defs/renderOptions"
       lines:
         type: array
         items:
@@ -490,6 +512,8 @@ $defs:
               - "null"
           optional:
             type: boolean
+          render:
+            $ref: "#/$defs/renderOptions"
 
   verificationState:
     type: string

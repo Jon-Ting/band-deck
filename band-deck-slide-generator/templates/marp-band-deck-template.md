@@ -34,21 +34,26 @@ h1, h2 {
   font-family: "Courier New", monospace;
   margin: 12px 0;
 }
+.chart-lines {
+  --chart-font-size: 30px;
+  --lyric-font-size: var(--chart-font-size);
+  --chord-font-size: var(--chart-font-size);
+  --bar-font-size: var(--chart-font-size);
+}
 .line-pair {
-  --chart-font-size: 34px;
   font-family: "Courier New", monospace;
   white-space: pre;
   margin: 10px 0 18px;
 }
 .chord-line {
   color: #c2410c;
-  font-size: var(--chart-font-size);
+  font-size: var(--chord-font-size);
   font-weight: 800;
   line-height: 1.05;
 }
 .lyric-line {
   color: #111827;
-  font-size: var(--chart-font-size);
+  font-size: var(--lyric-font-size);
   line-height: 1.1;
 }
 .song-map {
@@ -111,7 +116,7 @@ h1, h2 {
 </div>
 
 <div class="layout">
-<div>
+<div class="chart-lines"{{chart_style_attr}}>
 {{chorded_lyrics}}
 </div>
 <div class="song-map">
