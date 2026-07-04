@@ -625,12 +625,22 @@ def context_label_for_offset(
 
 
 def render_section_lines(section: Any, lines: list[Any]) -> list[str]:
-    """Render lyric/chord or instrumental section content."""
+    """Render lyric/chord or instrumental section content. Honors YAML key order
+    when both ``bars`` and ``lines`` are present on the same section."""
+    rendered: list[str] = []
+    rendered_bars: list[str] = []
+    bars_first = True
+
     if isinstance(section, dict):
         bars = section.get("bars")
         repeat = int(section.get("repeat") or 1)
+
         if bars:
-            rendered_bars: list[str] = []
+            section_keys = list(section.keys())
+            bars_first = (
+                "lines" not in section_keys
+                or section_keys.index("bars") < section_keys.index("lines")
+            )
             for _ in range(max(repeat, 1)):
                 for row in bars:
                     if isinstance(row, list):
@@ -640,13 +650,18 @@ def render_section_lines(section: Any, lines: list[Any]) -> list[str]:
                     rendered_bars.append(
                         f'<div class="bar-line">{html.escape(bar_text)}</div>'
                     )
-            return rendered_bars
 
-    rendered: list[str] = []
+        if bars_first:
+            rendered.extend(rendered_bars)
+
     for line in lines:
         rendered_line = render_chordpro_line(line)
         if rendered_line:
             rendered.append(rendered_line)
+
+    if not bars_first:
+        rendered.extend(rendered_bars)
+
     return rendered
 
 
