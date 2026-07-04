@@ -63,6 +63,17 @@ def test_skill_requires_exact_lyric_text_preservation() -> None:
     )
 
 
+def test_skill_documents_chord_and_repetition_superscripts() -> None:
+    skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    chordpro_docs = (
+        SKILL_DIR / "docs/chordpro-normalisation.md"
+    ).read_text(encoding="utf-8")
+
+    assert "superscript" in skill.lower()
+    assert "1st" in chordpro_docs
+    assert "1ˢᵗ" in chordpro_docs
+
+
 def test_validate_deck_accepts_minimal_canonical_yaml(tmp_path: Path) -> None:
     deck_yaml = tmp_path / "deck.yaml"
     deck_yaml.write_text(

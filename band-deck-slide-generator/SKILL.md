@@ -16,6 +16,7 @@ Generate rehearsal-focused band decks from a song request through a modular, sou
 - Cite or record sources for metadata, lyrics/chords, and arrangement.
 - Retrieve lyrics/chords from accessible internet sources when the user has not supplied them, then record the source and mark the result for copyright/licence review.
 - Produce canonical YAML before Marp or rendered outputs, and reject legacy/non-canonical deck shapes.
+- When filling YAML, use Unicode superscript characters for chord extensions/annotations and repetition ordinals where musically relevant, because chart text is escaped before rendering. Examples: `[G⁷]`, `[D/F♯]`, `[Cˢᵘˢ⁴]`, `1ˢᵗ time`, `2ⁿᵈ time`.
 - Default to `render.mode: practice` for rehearsal use. Use `review` only when the user is checking sources, metadata, verification status, or arrangement correctness before practice.
 - In practice mode, render chords above lyrics, suppress pagination, and show only current/next/after context on section slides.
 - For long sections, split slides at chord/lyric line-pair boundaries before shrinking text. Keep each chord line attached to its lyric line, repeat metadata/context on continuation slides, and use `cont.` labels.
