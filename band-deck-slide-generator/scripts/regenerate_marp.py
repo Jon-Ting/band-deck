@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate marp.md files from canonical YAML deck files.
+"""Regenerate marp.md and HTML files from canonical YAML deck files.
 
 Usage (from project root):
     uv run python band-deck-slide-generator/scripts/regenerate_marp.py
@@ -8,34 +8,55 @@ Usage (from project root):
 
 import argparse
 import glob
+import subprocess
 import sys
 from pathlib import Path
 
 from band_deck_helpers import generate_practice_marp, load_yaml, write_text
 
 
+def render_html(marp_path: Path) -> Path:
+    """Render a Marp markdown file to HTML using the Marp CLI."""
+    html_path = marp_path.with_suffix("").with_suffix(".html")
+    subprocess.run(
+        ["marp", "--html", str(marp_path), "-o", str(html_path)],
+        check=True,
+        capture_output=True,
+        stdin=subprocess.DEVNULL,
+        text=True,
+    )
+    return html_path
+
+
+def regenerate_one(yaml_path: Path) -> tuple[Path, Path]:
+    """Regenerate Marp and HTML files for one canonical YAML deck."""
+    marp_path = yaml_path.with_suffix(".marp.md")
+    deck = load_yaml(yaml_path)
+    marp = generate_practice_marp(deck)
+    write_text(marp_path, marp)
+    html_path = render_html(marp_path)
+    return marp_path, html_path
+
+
 def regenerate_all(songs_glob: str = "data/songs/**/*.yaml") -> list[Path]:
-    """Regenerate Marp files for every YAML path matched by ``songs_glob``."""
+    """Regenerate Marp and HTML files for every YAML path matched by ``songs_glob``."""
     paths: list[Path] = []
     for path in sorted(glob.glob(songs_glob, recursive=True)):
         src = Path(path)
         yaml_path = src.resolve()
-        marp_path = yaml_path.with_suffix(".marp.md")
 
         try:
-            deck = load_yaml(yaml_path)
+            marp_path, html_path = regenerate_one(yaml_path)
         except (OSError, ValueError) as exc:
-            print(f"ERROR loading {yaml_path}: {exc}", file=sys.stderr)
+            print(f"ERROR generating deck for {yaml_path}: {exc}", file=sys.stderr)
+            continue
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr.strip() if exc.stderr else str(exc)
+            print(f"ERROR rendering HTML for {yaml_path}: {detail}", file=sys.stderr)
             continue
 
-        try:
-            marp = generate_practice_marp(deck)
-        except (OSError, ValueError) as exc:
-            print(f"ERROR generating Marp for {yaml_path}: {exc}", file=sys.stderr)
-            continue
-
-        write_text(marp_path, marp)
         print(f"Wrote {marp_path}")
+        print(f"Wrote {html_path}")
         paths.append(marp_path)
 
     return paths
@@ -63,14 +84,16 @@ def main(argv: list[str] | None = None) -> int:
             if not yaml_path.exists():
                 print(f"ERROR: not found: {yaml_path}", file=sys.stderr)
                 return 2
-            marp_path = yaml_path.with_suffix(".marp.md")
             try:
-                deck = load_yaml(yaml_path)
-                marp = generate_practice_marp(deck)
-                write_text(marp_path, marp)
+                marp_path, html_path = regenerate_one(yaml_path)
                 print(f"Wrote {marp_path}")
+                print(f"Wrote {html_path}")
             except (OSError, ValueError) as exc:
                 print(f"ERROR {yaml_path}: {exc}", file=sys.stderr)
+                return 2
+            except subprocess.CalledProcessError as exc:
+                detail = exc.stderr.strip() if exc.stderr else str(exc)
+                print(f"ERROR rendering HTML for {yaml_path}: {detail}", file=sys.stderr)
                 return 2
     else:
         regenerate_all()
