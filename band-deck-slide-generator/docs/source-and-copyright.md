@@ -37,4 +37,4 @@ When the source is public but copyright-sensitive, keep the content in the inter
 
 ## License
 
-Include license number (CCLI, ISRC, BMI/ASCAP work ID, etc.) and copyright fields when available. Treat licence compliance as a human review item unless the user provides explicit confirmation.
+Include license number (ISRC, BMI/ASCAP work ID, CCLI, etc.) and copyright fields when available. Treat licence compliance as a human review item unless the user provides explicit confirmation.
