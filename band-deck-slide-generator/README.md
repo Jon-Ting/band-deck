@@ -39,8 +39,6 @@ scripts/render_marp.sh
 templates/practice-deck.marp.md
 ```
 
-Reference material remains in `examples/`, `prompts/`, `checklists/`, and `templates/marp-band-deck-template.md`, but the generator scripts support only canonical deck YAML.
-
 ## Standard Commands
 
 Validate canonical YAML:
