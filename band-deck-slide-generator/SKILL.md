@@ -47,7 +47,7 @@ Read `docs/workflow.md` for the full module contract.
 | Arrangement | Read `docs/arrangement-rules.md`; fill `arrangement.sequence`. |
 | Deck Input Builder | Validate against `schema/song-deck.schema.yaml`. |
 | Marp Deck Generator | Use `scripts/yaml_to_marp.py` and `templates/practice-deck.marp.md`. |
-| Renderer | Use `scripts/render_marp.sh` for HTML or PDF. |
+| Renderer | Use `scripts/render_marp.sh` for one-off HTML/PDF renders or `scripts/regenerate_outputs.py` to refresh Marp and HTML from YAML together. |
 | QA/Validation | Use `scripts/validate_deck.py` and `docs/validation-checklist.md`. |
 
 ## Canonical YAML
@@ -122,7 +122,7 @@ band-deck-slide-generator/scripts/render_marp.sh song.marp.md html
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md pdf
 ```
 
-Use `scripts/regenerate_marp.py song.yaml` when you want the script to regenerate both `song.marp.md` and `song.html`.
+Use `scripts/regenerate_outputs.py song.yaml` when you want the script to regenerate both `song.marp.md` and `song.html`.
 
 ## Output Contract
 

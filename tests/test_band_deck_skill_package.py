@@ -23,6 +23,7 @@ REQUIRED_ARCHITECTURE_FILES = [
     "scripts/band_deck_helpers.py",
     "scripts/yaml_to_marp.py",
     "scripts/validate_deck.py",
+    "scripts/regenerate_outputs.py",
     "scripts/render_marp.sh",
     "templates/practice-deck.marp.md",
 ]
@@ -317,7 +318,7 @@ validation:
     assert "--- transposed yaml (dry run) ---" in result.stdout
 
 
-def test_regenerate_marp_also_renders_html(tmp_path: Path) -> None:
+def test_regenerate_outputs_renders_marp_and_html(tmp_path: Path) -> None:
     deck_yaml = tmp_path / "deck.yaml"
     marp_path = tmp_path / "deck.marp.md"
     html_path = tmp_path / "deck.html"
@@ -381,7 +382,7 @@ validation:
     result = subprocess.run(
         [
             sys.executable,
-            str(SKILL_DIR / "scripts/regenerate_marp.py"),
+            str(SKILL_DIR / "scripts/regenerate_outputs.py"),
             str(deck_yaml),
         ],
         check=False,

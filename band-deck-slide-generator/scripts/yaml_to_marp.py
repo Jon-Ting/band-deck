@@ -20,7 +20,7 @@ Inputs:
 Outputs:
     By default the generated Marp Markdown is written beside the input YAML as
     SONG.marp.md. Use --output/-o to choose a different .marp.md path. This
-    script does not render HTML; use regenerate_marp.py or render_marp.sh after
+    script does not render HTML; use regenerate_outputs.py or render_marp.sh after
     generating Marp when an HTML deliverable is needed. When --dry-run is used
     without --output, Marp Markdown is printed to stdout instead of written.
 

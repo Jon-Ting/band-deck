@@ -2,8 +2,8 @@
 """Regenerate marp.md and HTML files from canonical YAML deck files.
 
 Usage (from project root):
-    uv run python band-deck-slide-generator/scripts/regenerate_marp.py
-    uv run python band-deck-slide-generator/scripts/regenerate_marp.py data/songs/goodness-of-god/goodness-of-god.yaml
+    uv run python band-deck-slide-generator/scripts/regenerate_outputs.py
+    uv run python band-deck-slide-generator/scripts/regenerate_outputs.py data/songs/goodness-of-god/goodness-of-god.yaml
 """
 
 import argparse

@@ -12,7 +12,7 @@ Use this workflow when turning a song request into a rehearsal deck.
 6. Generate or revise arrangement: expand repeats, decide cue slides, and flag uncertain order.
 7. Build canonical YAML: write `request`, `metadata`, `sources`, `normalised_chordpro`, `arrangement`, `render`, `deck`, `validation`, and `verification`. Do not rely on legacy top-level fallback fields.
 8. Generate Marp: run `scripts/yaml_to_marp.py song.yaml` to write `song.marp.md` beside the YAML, or follow `templates/practice-deck.marp.md`; split long sections according to `render.overflow_strategy` and per-slide `arrangement.sequence[].render` overrides.
-9. Render deliverables: use `scripts/render_marp.sh` for HTML or PDF when Marp CLI is installed, or `scripts/regenerate_marp.py song.yaml` when both `song.marp.md` and `song.html` should be refreshed together.
+9. Render deliverables: use `scripts/render_marp.sh` for HTML or PDF when Marp CLI is installed, or `scripts/regenerate_outputs.py song.yaml` when both `song.marp.md` and `song.html` should be refreshed together.
 10. Validate: run `scripts/validate_deck.py` and complete `docs/validation-checklist.md`.
 
 ## Module Contracts
