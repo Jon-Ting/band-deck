@@ -18,10 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 def default_schema_path() -> Path:
+    """Return the packaged canonical song-deck schema path."""
     return Path(__file__).resolve().parents[1] / "schema/song-deck.schema.yaml"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments for validating a canonical deck YAML file."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("deck_yaml", type=Path, help="Canonical song deck YAML")
     parser.add_argument(
@@ -34,6 +36,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Validate schema and semantic constraints, returning a process exit code."""
     args = parse_args(argv)
 
     try:

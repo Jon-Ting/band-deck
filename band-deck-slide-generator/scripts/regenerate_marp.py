@@ -15,6 +15,7 @@ from band_deck_helpers import generate_practice_marp, load_yaml, write_text
 
 
 def regenerate_all(songs_glob: str = "data/songs/**/*.yaml") -> list[Path]:
+    """Regenerate Marp files for every YAML path matched by ``songs_glob``."""
     paths: list[Path] = []
     for path in sorted(glob.glob(songs_glob, recursive=True)):
         src = Path(path)
@@ -41,6 +42,7 @@ def regenerate_all(songs_glob: str = "data/songs/**/*.yaml") -> list[Path]:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments for bulk or targeted Marp regeneration."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "yaml_paths",
@@ -53,6 +55,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Regenerate requested Marp files and return a process exit code."""
     args = parse_args(argv)
 
     if args.yaml_paths:

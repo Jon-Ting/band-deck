@@ -21,6 +21,7 @@ KEY_RE = re.compile(r"^(\s*)(target_key|requested_key):\s*\S+")
 
 
 def _transpose_chord(chord: str, semitones: int) -> str:
+    """Transpose a single chord token by semitone count."""
     if "/" in chord:
         parts = chord.rsplit("/", 1)
         return f"{_transpose_chord(parts[0], semitones)}/{_transpose_chord(parts[1], semitones)}"
@@ -37,6 +38,7 @@ def _transpose_chord(chord: str, semitones: int) -> str:
 
 
 def _transpose_chordpro_text(text: str, semitones: int) -> str:
+    """Transpose all bracketed ChordPro chord tokens in one text line."""
     def repl(m: re.Match[str]) -> str:
         return f"[{_transpose_chord(m.group(1), semitones)}]"
 
@@ -44,6 +46,7 @@ def _transpose_chordpro_text(text: str, semitones: int) -> str:
 
 
 def _semitone_shift(from_key: str, to_key: str) -> int:
+    """Return the chromatic semitone offset from one key to another."""
     for scale in (CHROMATIC, CHROMATIC_FLAT):
         try:
             return scale.index(to_key) - scale.index(from_key)
@@ -94,6 +97,7 @@ def _transpose_yaml_text(text: str, from_key: str, to_key: str) -> str:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments for YAML-to-Marp conversion and transposition."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("deck_yaml", type=Path, help="Canonical song deck YAML")
     parser.add_argument(
@@ -125,6 +129,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Convert a canonical deck YAML file to Marp and return an exit code."""
     args = parse_args(argv)
 
     yaml_path: Path = args.deck_yaml
