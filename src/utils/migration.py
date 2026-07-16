@@ -26,8 +26,6 @@ Design notes:
   ``migrated_at`` field records when this utility last touched the slide.
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import os

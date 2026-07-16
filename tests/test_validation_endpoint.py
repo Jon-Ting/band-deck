@@ -6,8 +6,6 @@ Covers workflow integration:
 - Multi-format consistency: YAML/Marp/HTML represent the same song
 """
 
-from __future__ import annotations
-
 from src.utils.arrangement_engine import propose_arrangement, validate_arrangement
 from src.utils.chordpro_parser import ChordPosition, ChordProLine
 from src.utils.marp_generator import generate_marp

@@ -1,7 +1,5 @@
 """Checks for the portable band-deck skill package."""
 
-from __future__ import annotations
-
 import subprocess
 import sys
 from pathlib import Path

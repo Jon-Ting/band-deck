@@ -1,7 +1,5 @@
 """Convert current search results into structured song YAML models."""
 
-from __future__ import annotations
-
 import re
 
 from src.utils.chordpro_parser import ChordPosition, ChordProLine

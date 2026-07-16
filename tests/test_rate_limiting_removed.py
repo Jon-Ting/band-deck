@@ -1,7 +1,5 @@
 """Regression tests for the app-wide API request handling."""
 
-from __future__ import annotations
-
 import src.main as main_module
 
 

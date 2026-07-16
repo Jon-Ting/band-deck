@@ -10,8 +10,6 @@ Selection and ordering are both encoded in the caller-provided slide_ids
 list: the array position is the playback order.
 """
 
-from __future__ import annotations
-
 import logging
 import os
 from typing import Iterable

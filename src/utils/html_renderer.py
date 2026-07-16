@@ -1,7 +1,5 @@
 """Render Marp markdown into standalone HTML using the Marp CLI."""
 
-from __future__ import annotations
-
 import logging
 import os
 import re

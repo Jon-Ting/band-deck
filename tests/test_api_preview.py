@@ -1,7 +1,5 @@
 """Tests for the HTML preview API endpoint."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 

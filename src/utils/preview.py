@@ -1,7 +1,5 @@
 """Preview generation helpers for HTML slide decks."""
 
-from __future__ import annotations
-
 import tempfile
 from dataclasses import asdict
 from pathlib import Path

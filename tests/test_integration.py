@@ -6,8 +6,6 @@ Marp → HTML chain is internally consistent. Per-endpoint behavior is covered
 in test_api_preview.py and test_generate_yaml_api.py.
 """
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 

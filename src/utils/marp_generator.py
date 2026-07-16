@@ -1,7 +1,5 @@
 """Generate Marp markdown slide decks from structured song data."""
 
-from __future__ import annotations
-
 import html
 from dataclasses import dataclass
 

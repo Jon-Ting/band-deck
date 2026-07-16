@@ -1,7 +1,5 @@
 """Tests for saved slide retrieval endpoints."""
 
-from __future__ import annotations
-
 import tempfile
 
 from flask import Flask

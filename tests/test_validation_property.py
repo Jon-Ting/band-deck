@@ -9,8 +9,6 @@ payloads and confirm structural assumptions documented in design.md:
 - Property 15: Metadata Completeness
 """
 
-from __future__ import annotations
-
 from dataclasses import asdict
 
 from hypothesis import HealthCheck, given, settings, strategies as _st

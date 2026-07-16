@@ -1,7 +1,5 @@
 """HTTP-level tests for the /api/validate and /api/health endpoints."""
 
-from __future__ import annotations
-
 import json
 
 from flask import Flask

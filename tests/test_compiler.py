@@ -1,7 +1,5 @@
 """Tests for the HTML compilation utility and the /api/compile endpoint."""
 
-from __future__ import annotations
-
 import json
 import os
 import shutil

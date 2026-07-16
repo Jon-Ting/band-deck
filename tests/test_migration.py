@@ -6,8 +6,6 @@ against legacy metadata that may still carry an orphaned ``pptx`` filename
 tombstone, but the on-disk file is not produced or preserved by the
 migration itself."""
 
-from __future__ import annotations
-
 import json
 import os
 import shutil
