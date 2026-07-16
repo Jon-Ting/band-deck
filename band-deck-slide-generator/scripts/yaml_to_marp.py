@@ -4,7 +4,7 @@
 Usage:
     uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml
     uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
-        --output SONG.marp.md
+        --output custom-name.marp.md
     uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
         --to-key G --output SONG-G.marp.md
     uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
@@ -18,10 +18,11 @@ Inputs:
     mappings. Legacy app-side SongYAML is not accepted by this portable script.
 
 Outputs:
-    By default the generated Marp Markdown is written to stdout. Use
-    --output/-o to write a .marp.md file. This script does not render HTML;
-    use regenerate_marp.py or render_marp.sh after generating Marp when an
-    HTML deliverable is needed.
+    By default the generated Marp Markdown is written beside the input YAML as
+    SONG.marp.md. Use --output/-o to choose a different .marp.md path. This
+    script does not render HTML; use regenerate_marp.py or render_marp.sh after
+    generating Marp when an HTML deliverable is needed. When --dry-run is used
+    without --output, Marp Markdown is printed to stdout instead of written.
 
 Transposition:
     --to-key/-k transposes bracketed ChordPro chord tokens in memory before
@@ -135,7 +136,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--output",
         "-o",
         type=Path,
-        help="Output .marp.md path. Writes to stdout when omitted.",
+        help="Output .marp.md path (default: beside input YAML as NAME.marp.md).",
     )
     parser.add_argument(
         "--to-key",
@@ -213,11 +214,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     # Write Marp output
-    if args.output:
-        write_text(args.output, marp_markdown)
-        sys.stdout.write(f"wrote: {args.output}\n")
-    else:
+    output_path = args.output or yaml_path.with_suffix(".marp.md")
+    if args.dry_run and not args.output:
         sys.stdout.write(marp_markdown)
+    else:
+        write_text(output_path, marp_markdown)
+        sys.stdout.write(f"wrote: {output_path}\n")
 
     # Write transposed YAML
     if transposed:
