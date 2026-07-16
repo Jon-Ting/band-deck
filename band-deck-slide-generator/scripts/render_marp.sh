@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# render_marp.sh
+# A small helper script for rendering Marp slide markdown into HTML or PDF.
+#
+# Usage:
+#   ./render_marp.sh INPUT.marp.md [html|pdf] [OUTPUT]
+#
+# INPUT:
+#   Path to a Marp-flavored Markdown slide source file.
+#
+# FORMAT:
+#   html  - render to HTML (default)
+#   pdf   - render to PDF
+#
+# OUTPUT:
+#   Optional path for the generated file. If omitted, the script will
+#   replace the input extension with .html or .pdf.
+#
+# Requirements:
+#   - Marp CLI must be installed and available on PATH.
 usage() {
   printf 'Usage: %s INPUT.marp.md [html|pdf] [OUTPUT]\n' "$0" >&2
 }
