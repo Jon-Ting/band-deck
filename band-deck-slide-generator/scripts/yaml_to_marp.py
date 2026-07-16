@@ -1,5 +1,33 @@
 #!/usr/bin/env python3
-"""Convert canonical band-deck YAML to Marp Markdown, with optional transposition."""
+"""Convert canonical band-deck YAML to Marp Markdown.
+
+Usage:
+    uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml
+    uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
+        --output SONG.marp.md
+    uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
+        --to-key G --output SONG-G.marp.md
+    uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
+        --to-key G --write-yaml SONG-G.yaml --output SONG-G.marp.md
+    uv run python band-deck-slide-generator/scripts/yaml_to_marp.py SONG.yaml \\
+        --to-key G --dry-run
+
+Inputs:
+    SONG.yaml must use the canonical band-deck slide-generator schema with
+    top-level request, metadata, sources, normalised_chordpro, and arrangement
+    mappings. Legacy app-side SongYAML is not accepted by this portable script.
+
+Outputs:
+    By default the generated Marp Markdown is written to stdout. Use
+    --output/-o to write a .marp.md file. This script does not render HTML;
+    use regenerate_marp.py or render_marp.sh after generating Marp when an
+    HTML deliverable is needed.
+
+Transposition:
+    --to-key/-k transposes bracketed ChordPro chord tokens in memory before
+    generating Marp. Unless --dry-run is used, the transposed YAML is also
+    written back to the original file or to --write-yaml/-w when provided.
+"""
 
 import argparse
 import logging
@@ -98,7 +126,10 @@ def _transpose_yaml_text(text: str, from_key: str, to_key: str) -> str:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments for YAML-to-Marp conversion and transposition."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("deck_yaml", type=Path, help="Canonical song deck YAML")
     parser.add_argument(
         "--output",
