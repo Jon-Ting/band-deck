@@ -23,6 +23,7 @@ Band practice decks should be dense enough for musicians and plain enough to rea
 
 ## Practice Mode Defaults
 
+<!-- render-options:start -->
 ```yaml
 render:
   mode: practice
@@ -31,14 +32,13 @@ render:
   show_pagination: false
   overflow_strategy: split
   max_line_pairs_per_slide: 6
-  font_size_px: 30
-  min_lyric_font_px: 28
-  min_chord_font_px: 22
+  font_size_px: 28
   continuation_labels: true
   theme: band_deck_light
 ```
 
-Use 30-36px lyric text, 24-30px chord text, and 34-40px section titles for projection readability.
+Supported chart font sizes: 22–38px.
+<!-- render-options:end -->
 
 Use arrangement-entry `render` blocks for slide-specific density or font sizing:
 

@@ -1,14 +1,22 @@
-from __future__ import annotations
-
 import sys
 import unittest
 from pathlib import Path
+
+import yaml
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from band_deck_helpers import default_marp_style, generate_practice_marp  # noqa: E402
+from band_deck_generator.render_options import (  # noqa: E402
+    DEFAULT_FONT_SIZE_PX,
+    FONT_SIZE_MAX_PX,
+    FONT_SIZE_MIN_PX,
+    FONT_SIZE_OPTION_KEYS,
+    render_font_size_schema,
+)
+from band_deck_generator.update_render_docs import planned_updates  # noqa: E402
 
 
 class GeneratePracticeMarpTests(unittest.TestCase):
@@ -187,6 +195,50 @@ class GeneratePracticeMarpTests(unittest.TestCase):
             marp,
         )
 
+    def test_chart_font_sizes_are_clamped_to_shared_bounds(self) -> None:
+        deck = {
+            "request": {"title": "Clamped Font Test"},
+            "metadata": {
+                "title": "Clamped Font Test",
+                "authors": ["Example"],
+                "target_key": "G",
+                "bpm": "unknown",
+                "time_signature": "4/4",
+                "capo": "none",
+            },
+            "sources": {
+                "metadata": [{"label": "test"}],
+                "lyrics_chords": [{"label": "test"}],
+            },
+            "normalised_chordpro": {
+                "sections": {
+                    "Verse": {
+                        "type": "verse",
+                        "lines": [{"chordpro": "[G]licensed line"}],
+                    }
+                }
+            },
+            "arrangement": {
+                "sequence": [
+                    {
+                        "section": "Verse",
+                        "render": {
+                            "font_size_px": 999,
+                            "chord_font_px": 2,
+                        },
+                    }
+                ]
+            },
+        }
+
+        marp = generate_practice_marp(deck)
+
+        self.assertIn(
+            f'<div class="chart-lines" style="--chart-font-size: {FONT_SIZE_MAX_PX}px; '
+            f'--chord-font-size: {FONT_SIZE_MIN_PX}px;">',
+            marp,
+        )
+
     def test_rejects_legacy_top_level_shape(self) -> None:
         legacy_deck = {
             "title": "Legacy Shape",
@@ -202,6 +254,48 @@ class GeneratePracticeMarpTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "canonical deck shape"):
             generate_practice_marp(legacy_deck)
+
+
+class RenderOptionConfigurationTests(unittest.TestCase):
+    def test_schema_font_size_definition_uses_shared_constants(self) -> None:
+        schema_path = Path(__file__).resolve().parents[1] / "schema/song-deck.schema.yaml"
+        schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            {
+                "type": "integer",
+                "minimum": FONT_SIZE_MIN_PX,
+                "maximum": FONT_SIZE_MAX_PX,
+            },
+            schema["$defs"]["fontSizePx"],
+        )
+
+        render_properties = schema["$defs"]["renderOptions"]["properties"]
+        for option_key in FONT_SIZE_OPTION_KEYS:
+            self.assertEqual(
+                {"$ref": "#/$defs/fontSizePx"},
+                render_properties[option_key],
+            )
+
+    def test_render_font_size_schema_is_generated_from_shared_constants(self) -> None:
+        self.assertEqual(
+            {
+                "type": "integer",
+                "minimum": FONT_SIZE_MIN_PX,
+                "maximum": FONT_SIZE_MAX_PX,
+            },
+            render_font_size_schema(),
+        )
+
+    def test_render_docs_updates_include_shared_font_numbers(self) -> None:
+        updates = planned_updates()
+        rendered_text = "\n".join(update.replacement for update in updates)
+
+        self.assertIn(f"font_size_px: {DEFAULT_FONT_SIZE_PX}", rendered_text)
+        self.assertIn(
+            f"Supported chart font sizes: {FONT_SIZE_MIN_PX}–{FONT_SIZE_MAX_PX}px.",
+            rendered_text,
+        )
 
 
 if __name__ == "__main__":

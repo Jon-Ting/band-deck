@@ -1,7 +1,5 @@
 """Reusable helpers for the portable band-deck skill scripts."""
 
-from __future__ import annotations
-
 import html
 import logging
 import re
@@ -10,6 +8,12 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+from band_deck_generator.render_options import (
+    DEFAULT_FONT_SIZE_PX,
+    SLIDE_RENDER_KEYS,
+    font_size_px_or_none,
+)
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError
 
@@ -298,16 +302,6 @@ def get_render_options(deck: dict[str, Any]) -> dict[str, Any]:
     return options
 
 
-SLIDE_RENDER_KEYS = {
-    "max_line_pairs_per_slide",
-    "font_size_px",
-    "chart_font_px",
-    "lyric_font_px",
-    "chord_font_px",
-    "bar_font_px",
-}
-
-
 def get_slide_render_options(
     base_options: dict[str, Any], entry: dict[str, Any], section: Any
 ) -> dict[str, Any]:
@@ -348,14 +342,14 @@ def positive_int_or_none(value: Any) -> int | None:
 
 def chart_style_attribute(render_options: dict[str, Any]) -> str:
     """Return inline CSS variables for chart font sizing."""
-    base_font = positive_int_or_none(
+    base_font = font_size_px_or_none(
         render_options.get("font_size_px") or render_options.get("chart_font_px")
     )
     style_values = {
         "--chart-font-size": base_font,
-        "--lyric-font-size": positive_int_or_none(render_options.get("lyric_font_px")),
-        "--chord-font-size": positive_int_or_none(render_options.get("chord_font_px")),
-        "--bar-font-size": positive_int_or_none(render_options.get("bar_font_px")),
+        "--lyric-font-size": font_size_px_or_none(render_options.get("lyric_font_px")),
+        "--chord-font-size": font_size_px_or_none(render_options.get("chord_font_px")),
+        "--bar-font-size": font_size_px_or_none(render_options.get("bar_font_px")),
     }
     declarations = [
         f"{name}: {value}px;"
@@ -398,7 +392,7 @@ h1, h2 {
   margin: 10px 0;
 }
 .chart-lines {
-  --chart-font-size: 30px;
+  --chart-font-size: """ + str(DEFAULT_FONT_SIZE_PX) + """px;
   --lyric-font-size: var(--chart-font-size);
   --chord-font-size: var(--chart-font-size);
   --bar-font-size: var(--chart-font-size);

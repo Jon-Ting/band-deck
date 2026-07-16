@@ -66,6 +66,7 @@ validation:
 
 Prefer these optional fields when producing practice-ready decks:
 
+<!-- render-options:start -->
 ```yaml
 render:
   mode: practice
@@ -74,9 +75,7 @@ render:
   show_pagination: false
   overflow_strategy: split
   max_line_pairs_per_slide: 6
-  font_size_px: 30
-  min_lyric_font_px: 28
-  min_chord_font_px: 22
+  font_size_px: 28
   continuation_labels: true
 
 verification:
@@ -84,6 +83,9 @@ verification:
   chords: unverified
   ccli: unverified
 ```
+
+Supported chart font sizes: 22–38px.
+<!-- render-options:end -->
 
 Set slide-specific layout overrides on arrangement entries when one section needs
 different density or text sizing. These values override top-level `render`

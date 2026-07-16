@@ -328,32 +328,30 @@ $defs:
         type: integer
         minimum: 1
       font_size_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       chart_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       lyric_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       chord_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       bar_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       min_lyric_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       min_chord_font_px:
-        type: integer
-        minimum: 1
+        $ref: "#/$defs/fontSizePx"
       continuation_labels:
         type: boolean
       theme:
         type:
           - string
           - "null"
+
+  fontSizePx:
+    type: integer
+    minimum: 22
+    maximum: 38
 
   keyOrUnknown:
     type:

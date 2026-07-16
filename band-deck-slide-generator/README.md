@@ -32,7 +32,9 @@ docs/validation-checklist.md
 docs/arrangement-rules.md
 docs/chordpro-normalisation.md
 docs/marp-style-guide.md
+scripts/band_deck_generator/
 scripts/band_deck_helpers.py
+scripts/update_render_docs.py
 scripts/yaml_to_marp.py
 scripts/validate_deck.py
 scripts/render_marp.sh
@@ -80,11 +82,15 @@ Use `schema/song-deck.schema.yaml` as the contract between modules. Non-canonica
 
 Global practice defaults live under top-level `render`:
 
+<!-- render-options:start -->
 ```yaml
 render:
   max_line_pairs_per_slide: 6
-  font_size_px: 30
+  font_size_px: 28
 ```
+
+Supported chart font sizes: 22–38px.
+<!-- render-options:end -->
 
 Per-slide-group overrides live on arrangement entries:
 
