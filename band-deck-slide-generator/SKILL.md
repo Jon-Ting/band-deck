@@ -117,10 +117,12 @@ Use `schema/song-deck.schema.yaml` for validation. Keep source confidence and re
 
 ```bash
 python band-deck-slide-generator/scripts/validate_deck.py song.yaml
-python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml --output song.marp.md
+python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md html
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md pdf
 ```
+
+Use `scripts/regenerate_marp.py song.yaml` when you want the script to regenerate both `song.marp.md` and `song.html`.
 
 ## Output Contract
 

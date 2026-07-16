@@ -50,6 +50,6 @@ Run this checklist before finalising a generated deck.
 
 ```bash
 python band-deck-slide-generator/scripts/validate_deck.py song.yaml
-python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml --output song.marp.md
+python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md html
 ```

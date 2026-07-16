@@ -52,7 +52,7 @@ python band-deck-slide-generator/scripts/validate_deck.py song.yaml
 Generate Marp:
 
 ```bash
-python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml --output song.marp.md
+python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml
 ```
 
 Render outputs:
@@ -60,6 +60,12 @@ Render outputs:
 ```bash
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md html
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md pdf
+```
+
+To regenerate both Marp and HTML for saved song YAML files, run:
+
+```bash
+python band-deck-slide-generator/scripts/regenerate_marp.py song.yaml
 ```
 
 ## Canonical YAML

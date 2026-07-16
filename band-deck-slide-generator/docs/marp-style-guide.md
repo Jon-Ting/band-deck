@@ -73,7 +73,7 @@ Prefer `font_size_px` for shared chord/lyric sizing. Use `lyric_font_px`,
 Generate Marp first, then render:
 
 ```bash
-python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml --output song.marp.md
+python band-deck-slide-generator/scripts/yaml_to_marp.py song.yaml
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md html
 band-deck-slide-generator/scripts/render_marp.sh song.marp.md pdf
 ```
