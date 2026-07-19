@@ -2,15 +2,10 @@
 
 import re
 
+from src.utils.chord_parser import CHORD_TOKEN_RE, get_semitone_shift, transpose_chord_string
 from src.utils.chordpro_parser import ChordPosition, ChordProLine
-from src.utils.search import get_semitone_shift, transpose_chord
 from src.utils.yaml_models import SongSection, SongYAML
 
-CHORD_TOKEN_RE = re.compile(
-    r"[A-G][b#]?"
-    r"(?:(?:m(?![a-z])|maj|min|dim|aug|sus[24]?|add[0-9]+|[0-9]+|b[0-9]+|#[0-9]+))*"
-    r"(?:/[A-G][b#]?)?"
-)
 
 
 def infer_section_type(section_name: str) -> str:
@@ -138,7 +133,7 @@ def transpose_chordpro_lines(
             text=line.text,
             chords=[
                 ChordPosition(
-                    chord=transpose_chord(chord_pos.chord, semitones, use_flats),
+                    chord=transpose_chord_string(chord_pos.chord, semitones, use_flats),
                     position=chord_pos.position,
                 )
                 for chord_pos in line.chords

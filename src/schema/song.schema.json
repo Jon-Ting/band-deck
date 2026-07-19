@@ -215,8 +215,8 @@
     },
     "chordSymbol": {
       "type": "string",
-      "pattern": "^[A-G](b|#)?(m|maj|min|dim|aug|sus|add)?[0-9]*(sus[24])?(add[0-9]+)?(maj[0-9]+)?(/[A-G](b|#)?)?$",
-      "description": "Chord symbol (e.g., 'C', 'Bm', 'D/F#', 'Gsus4')"
+      "pattern": "^[A-G][b#]?(?:m(?:aj|in)?|dim|aug|sus[24]?|add[0-9]+)?(?:[b#]?[0-9]+)*(?:/[A-G][b#]?)?$",
+      "description": "Chord symbol (e.g., 'C', 'Bm', 'D/F#', 'Gsus4', 'Bm7b5', 'G7b9', 'G7b9#11', 'G7b9#11b13'). Authoring grammar lives in src.utils.chord_parser."
     }
   }
 }

@@ -2,22 +2,25 @@
 
 Validates song data including arrangement references, chord symbols, section labels,
 metadata completeness, licensing information, and slide overflow estimation.
+
+The chord symbol grammar (``is_valid_chord``) is owned by
+``src.utils.chord_parser``. The re-export here keeps historical imports
+working while letting the parser hold the single source of truth.
 """
 
 import logging
 import re
 from dataclasses import dataclass
 
+from src.utils.chord_parser import CHORD_GRAMMAR_RE, is_valid_chord
 from src.utils.yaml_models import SongYAML
 
 logger = logging.getLogger(__name__)
 
-# Chord symbol pattern matching valid chord notation
-CHORD_PATTERN = re.compile(
-    r"^[A-G][b#]?"
-    r"(?:(?:m(?![a-z])|maj|min|dim|aug|sus[24]?|add[0-9]+|[0-9]+|b[0-9]+|#[0-9]+))*"
-    r"(?:/[A-G][b#]?)?$"
-)
+# Back-compat alias: external callers that previously imported
+# ``CHORD_PATTERN`` from this module keep working — the regex points at
+# the unified grammar owned by ``src.utils.chord_parser``.
+CHORD_PATTERN = CHORD_GRAMMAR_RE
 
 # Placeholder patterns to detect incomplete content
 PLACEHOLDER_PATTERNS = [
@@ -130,22 +133,17 @@ def validate_song(song: SongYAML, check_placeholders: bool = False) -> Validatio
     return ValidationResult(is_valid=is_valid, errors=errors, warnings=warnings)
 
 
-def is_valid_chord(chord: str) -> bool:
-    """Check if a chord symbol is valid.
-
-    Valid chords match pattern: [A-G][b#]?[modifiers]*[/bass]?
-    Examples: G, Bm, C/G, Dmaj7, Asus4, Cadd9
-
-    Args:
-        chord: The chord symbol to validate
-
-    Returns:
-        True if the chord is valid, False otherwise
-    """
-    if not chord or not chord.strip():
-        return False
-
-    return CHORD_PATTERN.match(chord.strip()) is not None
+# ``is_valid_chord`` is re-exported from ``src.utils.chord_parser`` at the top
+# of this module so test code and the canonical validator both rely on a
+# single grammar. The function below is intentionally not overridden here.
+__all__ = [
+    "ValidationResult",
+    "OverflowWarning",
+    "validate_song",
+    "is_valid_chord",
+    "estimate_slide_overflow",
+    "check_licensing",
+]  # noqa: F822
 
 
 def check_for_placeholders(song: SongYAML) -> list[str]:

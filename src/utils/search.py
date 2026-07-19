@@ -3,6 +3,18 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+# Chord grammar, validation, and transposition live in
+# ``src.utils.chord_parser`` so the main app and the slide-generator
+# pipeline share a single grammar (including alterations like
+# ``b9``, ``#11``, ``b5``, ``7b9#11b13``).
+from src.utils.chord_parser import (
+    CHROMATIC_SCALE_SHARPS,
+    CHROMATIC_SCALE_FLATS,
+    get_semitone_shift as _get_semitone_shift,
+    transpose_chord_string,
+    transpose_chord_line_string,
+)
+
 
 
 def format_worship_together_url(song_name, artist):
@@ -40,8 +52,9 @@ logger = logging.getLogger(__name__)
 SECTION_HEADERS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Interlude', 'Instrumental.', 'Bridge', 'Tag', 'Outro']
 NUMBERED_SECTIONS = ['Verse', 'Chorus', 'Bridge']
 
-CHROMATIC_SCALE_SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-CHROMATIC_SCALE_FLATS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+# ``CHROMATIC_SCALE_SHARPS`` and ``CHROMATIC_SCALE_FLATS`` are imported
+# from ``src.utils.chord_parser`` at the top of this module to keep a
+# single canonical definition. Inline duplication has been removed.
 
 
 
@@ -181,42 +194,21 @@ def get_note_name(index, use_flats=False):
     return scale[index % 12]
 
 def transpose_chord(chord, semitones, use_flats=False):
-    # Handle chords with bass notes (e.g., C/G, Eb/G)
-    if '/' in chord:
-        # Split only on the last '/' to handle cases like 'C/G/B'
-        parts = chord.rsplit('/', 1)
-        if len(parts) == 2:
-            root, bass = parts
-            # Transpose both root and bass
-            root = transpose_chord(root, semitones, use_flats)
-            bass = transpose_chord(bass, semitones, use_flats)
-            return f"{root}/{bass}"
-    
-    # Handle regular chords
-    match = re.match(r'^([A-G][b#]?)(.*)$', chord)
-    if not match:
-        return chord
-    root, suffix = match.groups()
-    idx = get_note_index(root, use_flats)
-    if idx == -1:
-        return chord
-    new_root = get_note_name(idx + semitones, use_flats)
-    return new_root + suffix
+    """Transpose a single chord symbol by ``semitones``.
+
+    Backed by :func:`src.utils.chord_parser.transpose_chord_string`, which
+    recognises the unified grammar (including alterations like ``b9``,
+    ``#11``, ``b5``). The signature is preserved for backwards
+    compatibility with existing callers.
+    """
+    return transpose_chord_string(chord, semitones, use_flats)
 
 def transpose_chord_line(line, semitones, use_flats=False):
-    def repl(match):
-        return transpose_chord(match.group(0), semitones, use_flats)
-    return re.sub(r'([A-G][b#]?(?:/([A-G][b#]?))?)', repl, line)
+    """Transpose every chord token in an aligned/space-padded chord row."""
+    return transpose_chord_line_string(line, semitones, use_flats)
 
 def get_semitone_shift(original_key, target_key):
-    # Use sharps for calculation
-    try:
-        idx_orig = get_note_index(original_key, use_flats=False)
-        idx_target = get_note_index(target_key, use_flats=False)
-        return (idx_target - idx_orig) % 12
-    except Exception:
-        return 0
-
+    return _get_semitone_shift(original_key, target_key)
 def clean_song_name_for_url(song_name):
     text = song_name.lower()
     # Replace any space or comma between numbers with a dash

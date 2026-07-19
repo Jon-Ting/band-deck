@@ -55,6 +55,18 @@ _MODIFIER = _st.sampled_from(
         "maj7",
         "m9",
         "maj9",
+        # Compound alterations (valid under the unified grammar —
+        # ``src.utils.chord_parser`` round-trips these. We avoid bare
+        # ``b5``/``#9`` because they collapse into root accidentals.)
+        "7b5",
+        "7#5",
+        "7b9",
+        "7#9",
+        "7#11",
+        "7b13",
+        "7b9#11",
+        "7b9#11b13",
+        "m7b5",
     ]
 )
 # Optional bass note; either empty (no slash) or "/X" / "/Xb" / "/X#".
