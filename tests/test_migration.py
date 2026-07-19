@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 import tempfile
+from pathlib import Path
 
 import yaml as pyyaml
 
@@ -234,3 +235,147 @@ class TestMigrationUtility:
             assert fmt in updated["filenames"]
         assert os.path.exists(_slide_path(slide_id, "marp"))
         assert os.path.exists(_slide_path(slide_id, "html"))
+
+
+class TestChordYamlMigration:
+    """Isolated tests for the chord-text normalisation helpers.
+
+    These cover the bracket-aware migration utility that converts
+    Unicode chord typography (``G\u2077``, ``D/F\u266f``, ``C\u1d50\u1d43\u02b2\u2077``)
+    inside ``[...]`` spans of song YAML files into plain ASCII so that
+    downstream rendering and grep/diff stay clean.
+    """
+
+    def setup_method(self):
+        self.test_dir = tempfile.mkdtemp()
+
+    def teardown_method(self):
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def _path(self, name: str = "song.yaml") -> str:
+        return os.path.join(self.test_dir, name)
+
+    def test_normalize_chord_yaml_text_converts_brackets_only(self):
+        # Bracketed chord text is rewritten in place; surrounding YAML
+        # (including free-text Unicode like the French ``\u00e9`` accent
+        # in lyrics) is preserved untouched.
+        original = (
+            "title: 'Amazing Grace'\n"
+            "sections:\n"
+            "  verse:\n"
+            "    chordpro: \"[G\u2077]Amazing [D/F\u266f]grace so [C\u1d50\u1d43\u02b2\u2077]sweet\"\n"
+            "    lyrics: 'caf\u00e9'\n"
+        )
+        rewritten = migration_module.normalize_chord_yaml_text(original)
+
+        assert "[G7]" in rewritten
+        assert "[D/F#]" in rewritten
+        assert "[Cmaj7]" in rewritten
+        # French accent and surrounding YAML structure preserved.
+        assert "caf\u00e9" in rewritten
+        assert "title: 'Amazing Grace'" in rewritten
+        assert "sections:\n" in rewritten
+
+    def test_normalize_chord_yaml_text_is_idempotent_on_canonical_text(self):
+        original = (
+            "chordpro: \"[G]Amazing [Bm]grace\"\n"
+            "meta: 'unicode like caf\u00e9 stays'\n"
+        )
+        first = migration_module.normalize_chord_yaml_text(original)
+        second = migration_module.normalize_chord_yaml_text(first)
+        assert first == second
+
+    def test_normalize_does_not_touch_non_chord_brackets(self):
+        # ``[foo, bar]`` is an inline YAML list reference — we leave it
+        # alone because it is not a chord bracket.
+        original = (
+            "tags: [foo, bar]\n"
+            "chordpro: \"[G\u2077]lyric\"\n"
+        )
+        rewritten = migration_module.normalize_chord_yaml_text(original)
+        assert "[foo, bar]" in rewritten
+        assert "[G7]" in rewritten
+
+    def test_migrate_chord_yaml_file_returns_true_on_change(self):
+        path = self._path()
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("chordpro: \"[G\u2077]song\"\n")
+        assert migration_module.migrate_chord_yaml_file(_Path(path)) is True
+
+        with open(path, encoding="utf-8") as f:
+            assert "[G7]" in f.read()
+
+    def test_migrate_is_idempotent_on_already_canonical_file(self):
+        path = self._path()
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("chordpro: \"[G]song\"\n")
+        # First call no-ops because the file is already ASCII.
+        assert migration_module.migrate_chord_yaml_file(_Path(path)) is False
+        # Repeated calls remain no-ops.
+        assert migration_module.migrate_chord_yaml_file(_Path(path)) is False
+
+    def test_migrate_writes_backup_when_requested(self):
+        path = self._path()
+        original = "chordpro: \"[G\u2077]song\"\n"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(original)
+
+        assert (
+            migration_module.migrate_chord_yaml_file(_Path(path), backup=True)
+            is True
+        )
+        # ``.bak`` sibling exists with the original Unicode intact.
+        backup_path = path + ".bak"
+        assert os.path.exists(backup_path)
+        with open(backup_path, encoding="utf-8") as f:
+            assert f.read() == original
+        with open(path, encoding="utf-8") as f:
+            assert "[G7]" in f.read()
+
+    def test_migrate_chord_yaml_files_returns_counts(self):
+        path_a = self._path("a.yaml")
+        path_b = self._path("b.yaml")
+        path_c = self._path("c.yaml")
+        with open(path_a, "w", encoding="utf-8") as f:
+            f.write("chordpro: \"[G\u2077]changeme\"\n")
+        with open(path_b, "w", encoding="utf-8") as f:
+            f.write("chordpro: \"[G]already\"\n")
+        # ``c.yaml`` does not exist; should be counted as error.
+
+        stats = migration_module.migrate_chord_yaml_files(
+            [_Path(path_a), _Path(path_b), _Path(path_c)]
+        )
+        assert stats == {"migrated": 1, "skipped": 1, "errors": 1}
+
+    def test_has_legacy_chord_unicode_detects_only_inside_brackets(self):
+        path = self._path()
+        # Free-text Unicode outside brackets is *not* considered legacy
+        # chord typography — we only react to chord bracket contents.
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("lyrics: 'caf\u00e9'\nchordpro: \"[G]amo\"\n")
+        assert migration_module.has_legacy_chord_unicode(_Path(path)) is False
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("chordpro: \"[G\u2077]amo\"\n")
+        assert migration_module.has_legacy_chord_unicode(_Path(path)) is True
+
+    def test_default_song_yaml_paths_walks_data_songs(self):
+        # Build a fake ``data/songs/<song>/<song>.yaml`` layout under a
+        # temporary project root and assert the helper finds every file.
+        project_root = Path(self.test_dir)
+        songs_root = project_root / "data" / "songs"
+        for song in ("alpha", "beta"):
+            song_dir = songs_root / song
+            song_dir.mkdir(parents=True)
+            (song_dir / f"{song}.yaml").write_text("title: song\n", encoding="utf-8")
+        # Top-level yaml that should be ignored (``<song>`` is required).
+        (songs_root / "orphan.yaml").write_text("ignored\n", encoding="utf-8")
+
+        paths = migration_module.default_song_yaml_paths(project_root)
+        assert sorted(p.name for p in paths) == ["alpha.yaml", "beta.yaml"]
+
+
+# Local alias so the test method bodies below stay short; ``_Path`` is the
+# same class as :class:`pathlib.Path`, just prefixed to mirror private
+# helpers used elsewhere in the suite.
+_Path = Path
