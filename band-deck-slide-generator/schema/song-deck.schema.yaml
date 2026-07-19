@@ -327,6 +327,15 @@ $defs:
       max_line_pairs_per_slide:
         type: integer
         minimum: 1
+      bars_per_line:
+        type: integer
+        minimum: 1
+        description: >-
+          Number of bars to concatenate into a single rendered `<div
+          class="bar-line">` per section. Defaults to 1 (current behaviour).
+          Nested bars are joined with a single `|` between adjacent bars, e.g.
+          `bars_per_line: 2` with `[[Em, -, E, -], [A, D, G, D]]` renders as
+          `| Em - E - | A D G D |`.
       font_size_px:
         $ref: "#/$defs/fontSizePx"
       chart_font_px:
@@ -450,6 +459,12 @@ $defs:
         type: integer
         minimum: 1
       bars:
+        description: >-
+          List of bar rows for instrumental sections. Each row is either an
+          array of chord cells (joined with spaces between `| ... |` when
+          rendered) or a single free-form string passed through unchanged.
+          Use `'-'` inside an array to denote a sustained beat (the previous
+          chord rings through that cell).
         type: array
         items:
           anyOf:
