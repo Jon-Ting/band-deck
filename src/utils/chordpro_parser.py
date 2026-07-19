@@ -10,6 +10,11 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 
+from src.utils.chord_parser import (
+    format_chord_html,
+    normalize_chord_superscripts,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,12 +70,16 @@ def tokenize_chordpro(raw_line: str) -> list[Token]:
     last_pos = 0
 
     for match in re.finditer(pattern, raw_line):
-        # Add text before chord
+        # Add text before chord. Preserve the original characters in the
+        # text payload even when the chord uses Unicode typography so
+        # renderers that bypass ``chord_parser`` still see the surface form.
         if match.start() > last_pos:
             tokens.append(Token(TokenType.TEXT, raw_line[last_pos : match.start()]))
 
-        # Add chord (contents of brackets)
-        tokens.append(Token(TokenType.CHORD, match.group(1)))
+        # Normalise Unicode chord text (``F\u266fm7`` -> ``F#m7``) so
+        # downstream validation, transposition, and rendering use ASCII.
+        chord_inner = normalize_chord_superscripts(match.group(1))
+        tokens.append(Token(TokenType.CHORD, chord_inner))
         last_pos = match.end()
 
     # Add remaining text
@@ -249,7 +258,10 @@ def pretty_print_chordpro(line: ChordProLine, format: str = "html") -> str:
         return reconstruct_brackets(line)
 
     elif format == "html":
-        # Generate HTML with <span class="chord"> tags
+        # Generate HTML with <span class="chord"> tags. Each chord goes
+        # through ``format_chord_html`` so its components render prettily
+        # (extensions as ``<sup>``, slash-bass in ``<span class="bass">``,
+        # accidentals as ``\u266f`` / ``\u266d`` music typography).
         result: list[str] = []
         last_pos = 0
 
@@ -259,8 +271,10 @@ def pretty_print_chordpro(line: ChordProLine, format: str = "html") -> str:
             # Add text before chord (HTML-escaped)
             if chord_pos.position > last_pos:
                 result.append(html.escape(line.text[last_pos : chord_pos.position]))
-            # Add chord with span tag (HTML-escaped)
-            result.append(f'<span class="chord">{html.escape(chord_pos.chord)}</span>')
+            # Add chord with span tag. ``format_chord_html`` handles
+            # HTML escaping internally for valid chords and falls back to
+            # escaped raw text when the input is not a recognised chord.
+            result.append(format_chord_html(chord_pos.chord))
             last_pos = chord_pos.position
 
         # Add remaining text (HTML-escaped)

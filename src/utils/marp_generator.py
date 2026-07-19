@@ -3,6 +3,7 @@
 import html
 from dataclasses import dataclass
 
+from src.utils.chord_parser import format_chord_html, format_chord_inner
 from src.utils.chordpro_parser import ChordProLine
 from src.utils.yaml_models import SongSection, SongYAML
 
@@ -136,13 +137,22 @@ def generate_marp(
 
 
 def format_chordpro_line(line: ChordProLine) -> str:
-    """Render a ChordPro line as aligned chord and lyric rows."""
+    """Render a ChordPro line as aligned chord and lyric rows.
+
+    The chord row is built from prettified inner markup for each chord
+    token, then wrapped in a single ``<span class="chord">``. Extensions
+    (``7``, ``b9``, ``#11`` etc.) carry through ``<sup>`` tags so they
+    render smaller and raised, and slash-bass portions carry
+    ``<span class="bass">`` for distinct styling. The row's monospace
+    column alignment is preserved because every character of a chord
+    still occupies exactly one column.
+    """
     rows: list[str] = []
 
     if line.chords:
         rows.append(
             '<div class="chord-row">'
-            f'<span class="chord">{_escape(_format_chord_row(line))}</span>'
+            f'<span class="chord">{_format_chord_row(line)}</span>'
             "</div>"
         )
 
@@ -157,13 +167,21 @@ def format_chordpro_line(line: ChordProLine) -> str:
 
 
 def _format_chord_row(line: ChordProLine) -> str:
-    """Build a monospace chord row from character positions."""
+    """Build a monospace chord row from character positions.
+
+    Each chord token runs through :func:`src.utils.chord_parser.format_chord_inner`
+    so its components render prettily (extensions as ``<sup>``, bass as
+    ``<span class="bass">``, accidentals as ``\u266f`` / ``\u266d``).
+    The output is wrapped in one ``<span class="chord">`` by the caller
+    so the row keeps a single colour/weight block while inner markup
+    still positions each component.
+    """
     chord_parts: list[str] = []
     last_pos = 0
 
     for chord_pos in sorted(line.chords, key=lambda c: c.position):
         chord_parts.append(" " * max(chord_pos.position - last_pos, 0))
-        chord_parts.append(chord_pos.chord)
+        chord_parts.append(format_chord_inner(chord_pos.chord))
         last_pos = chord_pos.position + len(chord_pos.chord)
 
     return "".join(chord_parts)
@@ -208,6 +226,8 @@ h2 {{ color: #1d4ed8; font-size: 36px; margin: 0 0 10px; }}
 .chord-row {{ min-height: 1em; line-height: 1; }}
 .lyric-row {{ line-height: 1.25; }}
 .chord {{ color: #c2410c; font-weight: 800; }}
+.chord sup {{ font-size: 0.65em; line-height: 0; vertical-align: baseline; position: relative; top: -0.4em; }}
+.chord .bass {{ color: #6b7280; font-weight: 700; }}
 .lyric {{ color: #111827; }}
 .song-map {{ font-size: 18px; line-height: 1.5; }}
 .current {{ background: #dbeafe; color: #1d4ed8; font-weight: 800; padding: 2px 6px; border-radius: 4px; }}

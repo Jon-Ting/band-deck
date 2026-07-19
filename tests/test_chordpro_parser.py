@@ -530,7 +530,13 @@ class TestPrettyPrintChordpro:
         assert result == "Just text"
 
     def test_html_format_escaping(self):
-        """Verify HTML escaping for safety."""
+        """Verify HTML escaping for safety.
+
+        ``C#`` flows through the chord parser and renders with music
+        typography (``C\u266f``) inside ``<span class="chord">``; the
+        surrounding lyric text is HTML-escaped so ``<script>`` cannot
+        inject markup.
+        """
         from src.utils.chordpro_parser import ChordProLine, pretty_print_chordpro
 
         line = ChordProLine(
@@ -540,7 +546,7 @@ class TestPrettyPrintChordpro:
 
         assert (
             result
-            == 'Test <span class="chord">C#</span>&lt;script&gt; &amp; stuff'
+            == 'Test <span class="chord">C\u266f</span>&lt;script&gt; &amp; stuff'
         )
 
     def test_html_format_chord_escaping(self):
