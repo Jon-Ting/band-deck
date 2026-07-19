@@ -37,33 +37,34 @@ import sys
 from pathlib import Path
 
 from band_deck_helpers import generate_practice_marp, load_yaml, write_text
+from src.utils.chord_parser import (
+    get_semitone_shift,
+    normalize_chord_superscripts,
+    transpose_chord_string,
+)
 
 
 logger = logging.getLogger(__name__)
 
-CHORD_BRACKET_RE = re.compile(r"\[([A-G][b#]?[^\[\]]*)\]")
-
-CHROMATIC = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-CHROMATIC_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+# Bracketed ``[Chord]`` tokens using the unified grammar from
+# ``src.utils.chord_parser``. Tighter than the legacy permissive matcher.
+CHORD_BRACKET_RE = re.compile(
+    r"\[([A-G][b#]?(?:m(?:aj|in)?|dim|aug|sus[24]?|add[0-9]+)?(?:[b#]?[0-9]+)*(?:/[A-G][b#]?)?)\]"
+)
 
 KEY_RE = re.compile(r"^(\s*)(target_key|requested_key):\s*\S+")
 
 
 def _transpose_chord(chord: str, semitones: int) -> str:
-    """Transpose a single chord token by semitone count."""
-    if "/" in chord:
-        parts = chord.rsplit("/", 1)
-        return f"{_transpose_chord(parts[0], semitones)}/{_transpose_chord(parts[1], semitones)}"
-    m = re.match(r"^([A-G][b#]?)(.*)$", chord)
-    if not m:
-        return chord
-    root, suffix = m.groups()
-    scale = CHROMATIC_FLAT if "b" in root else CHROMATIC
-    try:
-        idx = scale.index(root)
-    except ValueError:
-        return chord
-    return scale[(idx + semitones) % 12] + suffix
+    """Transpose a single chord token by semitone count.
+
+    Delegates to :func:`src.utils.chord_parser.transpose_chord_string`,
+    which preserves quality, extensions, alterations (``b9``, ``#11``,
+    ``b5``, ``7b9#11b13``), and slash-bass structures while only
+    shifting the root and bass notes. Legacy Unicode chord text (e.g.
+    ``G\u2077``) is normalised to ASCII before parsing.
+    """
+    return transpose_chord_string(normalize_chord_superscripts(chord), semitones)
 
 
 def _transpose_chordpro_text(text: str, semitones: int) -> str:
@@ -75,13 +76,16 @@ def _transpose_chordpro_text(text: str, semitones: int) -> str:
 
 
 def _semitone_shift(from_key: str, to_key: str) -> int:
-    """Return the chromatic semitone offset from one key to another."""
-    for scale in (CHROMATIC, CHROMATIC_FLAT):
-        try:
-            return scale.index(to_key) - scale.index(from_key)
-        except ValueError:
-            continue
-    raise ValueError(f"Unknown key: {from_key} or {to_key}")
+    """Return the chromatic semitone offset from one key to another.
+
+    Delegates to :func:`src.utils.chord_parser.get_semitone_shift` and
+    raises :class:`ValueError` for unknown keys (matching the legacy
+    contract this module exposed to callers).
+    """
+    shift = get_semitone_shift(from_key, to_key)
+    if shift == 0 and from_key and to_key and from_key != to_key:
+        raise ValueError(f"Unknown key: {from_key} or {to_key}")
+    return shift
 
 
 def _transpose_yaml_text(text: str, from_key: str, to_key: str) -> str:

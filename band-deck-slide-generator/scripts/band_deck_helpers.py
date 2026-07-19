@@ -20,7 +20,16 @@ from jsonschema.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
-CHORD_TOKEN_RE = re.compile(r"\[([A-G](?:b|#)?[^\]\s]*)\]")
+# Bracketed ``[Chord]`` tokens using the unified grammar from
+# ``src.utils.chord_parser``. Tighter than the legacy permissive
+# matcher (which accepted arbitrary bracket content) and now rejects
+# non-chord tokens such as ``[C D]`` while accepting alterations like
+# ``[G7b9]`` and ``[Bm7b5]``.
+from src.utils.chord_parser import (  # noqa: E402
+    CHORD_BRACKET_RE,
+    format_chord_inner,
+    normalize_chord_superscripts,
+)
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -196,16 +205,38 @@ def chordpro_text(line: Any) -> str:
 
 
 def render_chordpro_line(line: Any) -> str:
-    """Render one ChordPro line with chords above the exact lyric text."""
+    """Render one ChordPro line with chords above the exact lyric text.
+
+    Each chord token runs through
+    :func:`src.utils.chord_parser.format_chord_inner` so its components
+    render prettily:
+
+    * Extensions (``7``, ``b9``, ``#11``) become ``<sup>...</sup>``.
+    * Slash bass becomes ``<span class="bass">/B♭</span>`` so CSS can
+      shrink + dim it.
+    * Accidentals render as ``♯`` / ``♭`` music typography instead of
+      the ASCII ``#`` / ``b``.
+
+    The chord line keeps its column-by-column layout so the lyric row
+    below aligns with each chord token's first column. Trailing column
+    positions within a chord token are filled with placeholder spaces
+    so wider / shorter HTML markup (``<sup>``, ``<span class="bass">``)
+    never breaks the alignment grid.
+    """
     source = chordpro_text(line)
     if not source:
         return ""
+
+    # Normalise Unicode-typographic chord text (``Cᵐᵃʲ⁷`` -> ``Cmaj7``,
+    # ``D/F♯`` -> ``D/F#``) before bracket matching so the ASCII-only
+    # grammar regex sees what the parser would actually accept.
+    normalised_source = normalize_chord_superscripts(source)
 
     chord_cells: list[tuple[int, str]] = []
     lyric_parts: list[str] = []
     index = 0
     lyric_column = 0
-    for match in CHORD_TOKEN_RE.finditer(source):
+    for match in CHORD_BRACKET_RE.finditer(normalised_source):
         before = source[index : match.start()]
         lyric_parts.append(before)
         lyric_column += len(before)
@@ -217,19 +248,21 @@ def render_chordpro_line(line: Any) -> str:
     if not chord_cells:
         return f'<div class="lyric-line">{html.escape(lyric)}</div>'
 
-    chord_line = [" "] * max(len(lyric), 1)
+    chord_line: list[str] = []
     for column, chord in chord_cells:
-        if column >= len(chord_line):
-            chord_line.extend(" " for _ in range(column - len(chord_line) + 1))
-        for offset, character in enumerate(chord):
-            position = column + offset
-            if position >= len(chord_line):
-                chord_line.append(" ")
-            chord_line[position] = character
+        while len(chord_line) < column:
+            chord_line.append(" ")
+        # The chord's markup (e.g. ``<sup>7</sup>`` after the root letter)
+        # is rendered inline as part of the chord's first column; trailing
+        # column positions are filled with placeholder spaces so the chord
+        # keeps its visual width and the lyric row below stays aligned.
+        chord_line.append(format_chord_inner(chord))
+        for offset in range(1, len(chord)):
+            chord_line.append(" ")
 
     return (
         '<div class="line-pair">'
-        f'<div class="chord-line">{html.escape("".join(chord_line).rstrip())}</div>'
+        f'<div class="chord-line">{"".join(chord_line).rstrip()}</div>'
         f'<div class="lyric-line">{html.escape(lyric)}</div>'
         "</div>"
     )
@@ -408,6 +441,17 @@ h1, h2 {
   font-weight: 800;
   line-height: 1.05;
 }
+.chord-line sup {
+  font-size: 0.65em;
+  line-height: 0;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+.chord-line .bass {
+  color: #6b7280;
+  font-weight: 700;
+}
 .lyric-line {
   color: #111827;
   font-size: var(--lyric-font-size);
@@ -420,6 +464,21 @@ h1, h2 {
   font-weight: 800;
   line-height: 1.35;
   margin: 10px 0;
+}
+.bar-line sup {
+  font-size: 0.65em;
+  line-height: 0;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+.bar-line .bass {
+  color: #6b7280;
+  font-weight: 700;
+  font-size: 0.8em;
+  vertical-align: sub;
+  position: relative;
+  top: 0.2em;
 }
 .chord {
   color: #c2410c;
@@ -618,9 +677,82 @@ def context_label_for_offset(
     return "End"
 
 
+def _format_bar_cells(row: Any) -> str:
+    """Render a single bar's cell text without surrounding ``| ... |``.
+
+    Each string cell passes through
+    :func:`src.utils.chord_parser.format_chord_inner` so altered dominants
+    (``G7b9#11``) and slash voicings (``D/F#``) render with ``<sup>``
+    extensions and a ``<span class="bass">`` bass portion. Sustain
+    dashes (``-``), custom bar labels, and any other non-chord string
+    input fall through ``format_chord_inner``'s invalid-input escape
+    path (``html.escape``) so the result is HTML-safe — the caller no
+    longer needs to wrap the joined bar inline in another escape.
+
+    String rows that contain internal whitespace (e.g. the legacy MIDI
+    bar format ``"G7b9 D/F# - E"``) are split on whitespace so each
+    token is prettified individually. Single-token string rows that
+    already carry their own delimiters (``"| Custom Bar |"``) pass
+    through as one unit so the user-supplied delimiters are preserved.
+    """
+    if isinstance(row, list):
+        if not row:
+            return ""
+        return " ".join(
+            format_chord_inner(str(cell)) if isinstance(cell, str) else str(cell)
+            for cell in row
+        )
+    if isinstance(row, str):
+        if any(ch.isspace() for ch in row):
+            return " ".join(
+                format_chord_inner(token)
+                for token in row.split()
+                if token
+            )
+        return format_chord_inner(row)
+    return str(row)
+
+
+def _join_bars(chunk: list[Any]) -> str:
+    """Join a chunk of bars into one rendered bar line.
+
+    A single-bar chunk is wrapped as ``| cells |`` when the bar is a list
+    (so ``["Em", "-", "E", "-"]`` becomes ``| Em - E - |``), but a
+    pre-formatted string bar ``"| Custom Bar |"`` or ``"Plain bar
+    text"`` passes through as-is so callers can supply their own
+    delimiters. A chunk of multiple bars is joined with a single ``|``
+    between adjacent bars so musicians can still count bar boundaries:
+    ``| bar1_cells | bar2_cells | ... | barN_cells |``.
+
+    Every cell routes through :func:`_format_bar_cells` so chord markup
+    (``<sup>``, ``<span class="bass">``) and HTML-safe escaping for
+    non-chord text happens in one place; the caller can embed the
+    returned string directly inside a ``<div class="bar-line">`` without
+    an additional ``html.escape`` pass.
+    """
+    if len(chunk) == 1:
+        bar = chunk[0]
+        if isinstance(bar, list):
+            if not bar:
+                return "| |"
+            return f"| {_format_bar_cells(bar)} |"
+        # String bar: pass through unchanged so user-supplied delimiters
+        # (``"| Custom Bar |"``) aren't doubled up, while non-chord text
+        # still gets escaped through :func:`format_chord_inner`'s fallback.
+        return _format_bar_cells(bar)
+
+    cell_texts = [_format_bar_cells(bar) for bar in chunk]
+    joined = " | ".join(cell_texts)
+    if not joined.strip():
+        return "| |"
+    return f"| {joined} |"
+
+
 def render_section_lines(section: Any, lines: list[Any]) -> list[str]:
     """Render lyric/chord or instrumental section content. Honors YAML key order
-    when both ``bars`` and ``lines`` are present on the same section."""
+    when both ``bars`` and ``lines`` are present on the same section. Honors
+    ``section.render.bars_per_line`` to concatenate multiple bars into a
+    single rendered line."""
     rendered: list[str] = []
     rendered_bars: list[str] = []
     bars_first = True
@@ -628,6 +760,14 @@ def render_section_lines(section: Any, lines: list[Any]) -> list[str]:
     if isinstance(section, dict):
         bars = section.get("bars")
         repeat = int(section.get("repeat") or 1)
+        section_render = section.get("render")
+        bars_per_line = (
+            positive_int(
+                section_render.get("bars_per_line"), default=1
+            )
+            if isinstance(section_render, dict)
+            else 1
+        )
 
         if bars:
             section_keys = list(section.keys())
@@ -636,13 +776,13 @@ def render_section_lines(section: Any, lines: list[Any]) -> list[str]:
                 or section_keys.index("bars") < section_keys.index("lines")
             )
             for _ in range(max(repeat, 1)):
-                for row in bars:
-                    if isinstance(row, list):
-                        bar_text = "| " + " | ".join(str(chord) for chord in row) + " |"
-                    else:
-                        bar_text = str(row)
+                chunks = [
+                    bars[index : index + bars_per_line]
+                    for index in range(0, len(bars), bars_per_line)
+                ]
+                for chunk in chunks:
                     rendered_bars.append(
-                        f'<div class="bar-line">{html.escape(bar_text)}</div>'
+                        f'<div class="bar-line">{_join_bars(chunk)}</div>'
                     )
 
         if bars_first:
